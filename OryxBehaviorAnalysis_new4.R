@@ -1,5 +1,5 @@
-#************************************************************************************************************************
-#************************************************************************************************************************
+#*********************************************************************************************************
+#*********************************************************************************************************
 
 # Project: SHO Stress and Behavior Analysis
 # Date: 10 November 2016
@@ -8,11 +8,10 @@
 #               Fit data in a Bayesian framework to estimate the probability of each behavioral activity
 #               Data fit based on a multinomial likelihood
 #               How does each behavior change across the time periods?  Using each animal as a control.
-#               Expectation is that adverse behaviors, such as head-shaking, should increase during the period animals are collared 
-#               and then return to normal.
+#               Expectation is that adverse behaviors, such as head-shaking, should increase during the period animals are collared and then return to normal.
 
-#************************************************************************************************************************
-#************************************************************************************************************************
+#*********************************************************************************************************
+#*********************************************************************************************************
 
 # Clear the cache
 rm(list=ls())
@@ -20,9 +19,8 @@ rm(list=ls())
 # Load necessary libraries
 library(tidyr)
 
-# Set working directory
-#setwd("C:/Users/stabachj/Dropbox (Smithsonian)/Projects/Oryx/StressAnalysis/Behavior")
-setwd("C:/Users/Jared/Dropbox (Smithsonian)/Projects/Oryx/StressAnalysis/Behavior")
+# Set working directory...already set in RStudi
+#setwd("C:/Users/Jared/Dropbox (Smithsonian)/Projects/Oryx/StressAnalysis/Behavior")
 
 # Read in file
 bdata <- read.csv("Behavior.Nov3.csv")
@@ -36,8 +34,8 @@ bdata <- bdata[,c(1:15,26:27,16:25)]
 
 # Code the Control and Treatment records.
 bdata$Control <- ifelse(bdata$Treatment == "control",1,2) 
-bdata.control <- bdata[which(bdata$"Treatment" == "control"),]
-bdata <- bdata[which(bdata$"Treatment" != "control"),]
+bdata.control <- bdata[which(bdata$Treatment == "control"),]
+bdata <- bdata[which(bdata$Treatment != "control"),]
 
 # Look at data quickly
 # Set AdjObTime as a factor 
@@ -128,7 +126,7 @@ val.xlab <- colnames(y)
 # Look at the trace plots for all the posterior distributions for the behaviors
 par(mfrow=c(3,2))
 
-for (i in 2:ncol(y)){
+for (i in 1:ncol(y)){
   # Plot histogram, eliminating burn-in
   hist(df1[,i], freq=FALSE, breaks=100, xlim=c(min(df1[,i]),max(df1[,i])), main= paste0("Posterior Distribution of ",val.xlab[i]), xlab=val.xlab[i])
   # Overlay posterior distribution
@@ -158,6 +156,18 @@ seq.val2 <- seq(12,36,3)
 coefs.time3 <- apply(df1[,1:9],2,mean) + apply(df1[,seq.val2],2,mean)
 per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3))
 
+# Look at the probabilities for each time period
+colnames(y)
+control.probs
+per2.probs
+per3.probs
+
+# Probabilities should add up to 1
+sum(control.probs) == 1
+round(sum(control.probs),digits=0) == 1
+sum(per2.probs) == 1
+sum(per3.probs) == 1
+
 # ***********************************************************************
 # ***********************************************************************
 
@@ -169,12 +179,17 @@ test <- cbind(testing2,testing3)
 
 test <- as.matrix(test)
 
+library(MCMCvis)
+
 par(mfrow=c(1,1))
 MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-1.5,1.5))
 
 # To graph the differences, need to append to a dataframe
 test <- exp(df1[,1])/sum(exp(df1[,1:9]))
 test <- df1[,1] - df1[,12]
+
+# ***********************************************************************
+# ***********************************************************************
 
 # End Code
 

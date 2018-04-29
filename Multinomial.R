@@ -21,7 +21,7 @@ model{
     # Multinomial response
     Y[i, ] ~ dmulti(p[i, ] , N[i])
 
-    for (j in 1:n.outcomes) {     # loop around foods
+    for (j in 1:n.outcomes) {     # loop around
       p[i,j] <- phi[i,j] / sum(phi[i, ])
       log(phi[i,j]) <- alpha[j] + beta[PERIOD[i], j]
     }
