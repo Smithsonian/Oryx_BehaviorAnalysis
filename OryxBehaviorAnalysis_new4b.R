@@ -96,7 +96,8 @@ data.list=list(
 # Fit model
 jm2=jags.model("Multinomial.R",data=data.list,n.chains=3,n.adapt=n.adapt)
 update(jm2, n.iter=n.update) # Burn-in the chain
-zm2=coda.samples(jm2,variable.names=c("alpha","beta","PROBS"), n.iter=n.iter, n.thin=1) # generate the coda object
+zm2=coda.samples(jm2,variable.names=c("alpha","beta","PROBS"), n.iter=n.iter, n.thin=1)
+# generate the coda object
 
 # Deviance Information Criteria
 zdic=dic.samples(jm2,n.iter=n.iter)
@@ -207,7 +208,7 @@ test <- as.matrix(test)
 library(MCMCvis)
 
 par(mfrow=c(1,1))
-MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-1.5,1.5))
+MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
 
 # Loop through all the behaviors, creating a graph for each
 Trt1 <- seq(14,35,3)
@@ -219,8 +220,18 @@ for (i in 2:length(Trt1)){
   testing3 <- df.test[,Trt2[i]]
   test <- cbind(testing2,testing3)
   test <- as.matrix(test)
-  MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-3.5,1.5),main=val.xlab[i])
+  MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-5,5),main=val.xlab[i])
 }
+
+# Show all the contrast in Time period 1 (Trmt1)
+df.trmt1 <- df.test[,Trt1]
+MCMCplot(df.trmt1)
+  #, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
+
+df.trmt2 <- df.test[,Trt2]
+MCMCplot(df.trmt2)
+#, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
+
 
 # To graph the differences, need to append to a dataframe
 test <- exp(df.test[,1])/sum(exp(df.test[,1:9]))
