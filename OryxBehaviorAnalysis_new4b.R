@@ -127,53 +127,62 @@ val.xlab <- colnames(y)
 par(mfrow=c(3,2))
 
 # Plot the control probabilities for each behavior to investigate proper exploration of the parameter space
-plot.seq <- seq(1,25,3)
+val.2.plot <- 28:36
+#plot.seq <- seq(1,25,3)
 plot.seq.Trmt1 <- seq(2,26,3)
 plot.seq.Trmt2 <- seq(3,27,3)
 
-for (i in 1:length(val.xlab)){
+for (i in 2:length(val.xlab)){
   # Plot histogram, eliminating burn-in
   #print(i)
-  hist(df1[,plot.seq[i]], freq=FALSE, breaks=100, xlim=c(min(df1[,plot.seq[i]]),max(df1[,plot.seq[i]])), main= paste0("Posterior Distribution of ",val.xlab[i]), xlab=val.xlab[i])
+  hist(df1[,val.2.plot[i]], freq=FALSE, breaks=100, xlim=c(min(df1[,val.2.plot[i]]),max(df1[,val.2.plot[i]])), main= paste0("Posterior Distribution of ",val.xlab[i]), xlab=val.xlab[i])
   # Overlay posterior distribution
-  lines(density(df1[,plot.seq[i]],adjust=3),col="black",lwd=2)
-  lines(density(df2[,plot.seq[i]],adjust=3),col="red",lwd=2)
-  lines(density(df3[,plot.seq[i]],adjust=3),col="blue",lwd=2)
+  lines(density(df1[,val.2.plot[i]],adjust=3),col="black",lwd=2)
+  lines(density(df2[,val.2.plot[i]],adjust=3),col="red",lwd=2)
+  lines(density(df3[,val.2.plot[i]],adjust=3),col="blue",lwd=2)
   
   # Plot trace plot
-  plot(df1[,plot.seq[i]],xlab="Iteration Number",ylab=paste0("Value of "," ",val.xlab[i]),type="l", main="Trace Plot")
-  lines(df2[,plot.seq[i]],col="red")
-  lines(df3[,plot.seq[i]],col="blue")
-  abline(a=mean(df1[,plot.seq[i]]),b=0,col="green")
+  plot(df1[,val.2.plot[i]],xlab="Iteration Number",ylab=paste0("Value of "," ",val.xlab[i]),type="l", main="Trace Plot")
+  lines(df2[,val.2.plot[i]],col="red")
+  lines(df3[,val.2.plot[i]],col="blue")
+  abline(a=mean(df1[,val.2.plot[i]]),b=0,col="green")
 }
 
 # Summarize the activity probabilities....am just using chain 1 here (df1)
 # plot.seq... are indexes to calculate the probability summaries for each of the treatment groups, including the control.
 # The summed probabilities should all sum to 1 across each activity
 # This was the whole reason for going to moving to a multinomial regression
-coefs.bhv <- apply(df1[,plot.seq],2,mean)
-quant.bhv <- apply(df1[,plot.seq],2,quantile)
-sum(coefs.bhv)==1
-
-# Do the same for each of the trmt groups
-coefs.trmt1 <- apply(df1[,plot.seq.Trmt1],2,mean)
-quant.trmt1 <- apply(df1[,plot.seq.Trmt1],2,quantile)
-sum(coefs.trmt1)==1
-
-coefs.trmt2 <- apply(df1[,plot.seq.Trmt2],2,mean)
-quant.trmt2 <- apply(df1[,plot.seq.Trmt2],2,quantile)
-sum(coefs.trmt2)==1
+coefs.bhv <- apply(df1[,val.2.plot],2,mean)
+quant.bhv <- apply(df1[,val.2.plot],2,quantile)
 
 # Probability of control activities
-control.probs <- exp(coefs.bhv)/sum(exp(coefs.bhv))
+(control.probs <- exp(coefs.bhv)/sum(exp(coefs.bhv)))
+sum(control.probs)
+# Which should be the same as
+control.seq <- seq(1,25,3)
+(coefs.bhv.test <- apply(df1[,control.seq],2,mean))
 
-seq.val1 <- seq(11,35,3)
-coefs.time2 <- apply(df1[,1:9],2,mean) + apply(df1[,seq.val1],2,mean)
-per2.probs <- exp(coefs.time2)/sum(exp(coefs.time2))
+# Now do the same for Trmt 1
+#seq.val1 <- seq(11,35,3)
+plot.seq.Trmt1 <- seq(38,62,3)
+coefs.time2 <- apply(df1[,28:36],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
+(per2.probs <- exp(coefs.time2)/sum(exp(coefs.time2)))
 
-seq.val2 <- seq(12,36,3)
-coefs.time3 <- apply(df1[,1:9],2,mean) + apply(df1[,seq.val2],2,mean)
-per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3))
+# Which should be the same as
+control.seq1 <- seq(2,26,3)
+(coefs.bhv.test <- apply(df1[,control.seq1],2,mean))
+
+#seq.val2 <- seq(12,36,3)
+plot.seq.Trmt2 <- seq(39,63,3)
+coefs.time3 <- apply(df1[,28:36],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
+(per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3)))
+
+# Which should be the same as
+control.seq <- seq(3,27,3)
+(coefs.bhv.test <- apply(df1[,control.seq],2,mean))
+
+
+
 
 # Look at the probabilities for each time period
 colnames(y)
