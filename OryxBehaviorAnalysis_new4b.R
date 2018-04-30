@@ -181,9 +181,6 @@ coefs.time3 <- apply(df1[,28:36],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
 control.seq <- seq(3,27,3)
 (coefs.bhv.test <- apply(df1[,control.seq],2,mean))
 
-
-
-
 # Look at the probabilities for each time period
 colnames(y)
 control.probs
@@ -191,17 +188,17 @@ per2.probs
 per3.probs
 
 # Probabilities should add up to 1
-sum(control.probs) == 1
-round(sum(control.probs),digits=0) == 1
-sum(per2.probs) == 1
-sum(per3.probs) == 1
+sum(control.probs)
+sum(per2.probs)
+sum(per3.probs)
 
 # ***********************************************************************
 # ***********************************************************************
 
-testing1 <- df1[,9] + df1[,34]
-testing2 <- df1[,35]
-testing3 <- df1[,36]
+df.test <- df1[,-1:-27]
+testing1 <- df.test[,9] + df.test[,34]
+testing2 <- df.test[,35]
+testing3 <- df.test[,36]
 
 test <- cbind(testing2,testing3)
 
@@ -212,9 +209,22 @@ library(MCMCvis)
 par(mfrow=c(1,1))
 MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-1.5,1.5))
 
+# Loop through all the behaviors, creating a graph for each
+Trt1 <- seq(14,35,3)
+Trt2 <- seq(15,36,3)
+val.xlab
+
+for (i in 2:length(Trt1)){
+  testing2 <- df.test[,Trt1[i]]
+  testing3 <- df.test[,Trt2[i]]
+  test <- cbind(testing2,testing3)
+  test <- as.matrix(test)
+  MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-3.5,1.5),main=val.xlab[i])
+}
+
 # To graph the differences, need to append to a dataframe
-test <- exp(df1[,1])/sum(exp(df1[,1:9]))
-test <- df1[,1] - df1[,12]
+test <- exp(df.test[,1])/sum(exp(df.test[,1:9]))
+test <- df.test[,1] - df.test[,12]
 
 # ***********************************************************************
 # ***********************************************************************
