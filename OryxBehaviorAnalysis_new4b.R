@@ -96,7 +96,8 @@ data.list=list(
 # Fit model
 jm2=jags.model("Multinomial.R",data=data.list,n.chains=3,n.adapt=n.adapt)
 update(jm2, n.iter=n.update) # Burn-in the chain
-zm2=coda.samples(jm2,variable.names=c("alpha","beta","PROBS"), n.iter=n.iter, n.thin=1) # generate the coda object
+zm2=coda.samples(jm2,variable.names=c("alpha","beta","PROBS"), n.iter=n.iter, n.thin=1)
+# generate the coda object
 
 # Deviance Information Criteria
 zdic=dic.samples(jm2,n.iter=n.iter)
@@ -150,8 +151,7 @@ for (i in 2:length(val.xlab)){
 
 # Summarize the activity probabilities....am just using chain 1 here (df1)
 # plot.seq... are indexes to calculate the probability summaries for each of the treatment groups, including the control.
-# The summed probabilities should all sum to 1 across each activity
-# This was the whole reason for going to moving to a multinomial regression
+# The summed probabilities should all sum to 1 across each activity.  This was the whole reason for going to moving to a multinomial regression
 coefs.bhv <- apply(df1[,val.2.plot],2,mean)
 quant.bhv <- apply(df1[,val.2.plot],2,quantile)
 
@@ -195,6 +195,11 @@ sum(per3.probs)
 # ***********************************************************************
 # ***********************************************************************
 
+# Separate out the probabilities
+# From this, could graph the probability of doing each activity or across each treatment.
+df.prob <- df1[,1:27]
+
+# Separate the alpha and beta coefficients, to compare the effects
 df.test <- df1[,-1:-27]
 testing1 <- df.test[,9] + df.test[,34]
 testing2 <- df.test[,35]
@@ -214,13 +219,22 @@ Trt1 <- seq(14,35,3)
 Trt2 <- seq(15,36,3)
 val.xlab
 
-for (i in 2:length(Trt1)){
-  testing2 <- df.test[,Trt1[i]]
-  testing3 <- df.test[,Trt2[i]]
-  test <- cbind(testing2,testing3)
-  test <- as.matrix(test)
-  MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-3.5,1.5),main=val.xlab[i])
-}
+par(mfrow=c(1,2))
+
+# Extract the values to plot
+testing2 <- df.test[,Trt1]
+testing3 <- df.test[,Trt2]
+
+# Convert to a matrix
+testing2 <- as.matrix(testing2)
+testing3 <- as.matrix(testing3)
+
+# Plot the results
+MCMCplot(testing2, labels=val.xlab[2:9],xlim=c(-3,3),main="Cntl v Trmt 1", med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
+MCMCplot(testing3, labels = val.xlab[2:9], xlim=c(-3,3),main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
+
+
+
 
 # To graph the differences, need to append to a dataframe
 test <- exp(df.test[,1])/sum(exp(df.test[,1:9]))
