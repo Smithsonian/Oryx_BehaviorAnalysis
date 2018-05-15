@@ -212,13 +212,14 @@ test <- as.matrix(test)
 library(MCMCvis)
 
 par(mfrow=c(1,1))
-MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-1.5,1.5))
+MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
 
 # Loop through all the behaviors, creating a graph for each
 Trt1 <- seq(12,27,3)
 Trt2 <- seq(13,28,3)
 val.xlab
 
+<<<<<<< HEAD
 par(mfrow=c(1,2))
 
 # Extract the values to plot
@@ -236,6 +237,25 @@ MCMCplot(testing3, labels = val.xlab[2:7], xlim=c(-3,3),main="Cntl v Trmt 2",med
 # Place results into a stacked plot to show probabilities in each behavior category.
 
 
+
+=======
+for (i in 2:length(Trt1)){
+  testing2 <- df.test[,Trt1[i]]
+  testing3 <- df.test[,Trt2[i]]
+  test <- cbind(testing2,testing3)
+  test <- as.matrix(test)
+  MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-5,5),main=val.xlab[i])
+}
+>>>>>>> bfe826d47857b0cf9e4c465fc3df670916e64ecc
+
+# Show all the contrast in Time period 1 (Trmt1)
+df.trmt1 <- df.test[,Trt1]
+MCMCplot(df.trmt1)
+  #, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
+
+df.trmt2 <- df.test[,Trt2]
+MCMCplot(df.trmt2)
+#, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
 
 
 # To graph the differences, need to append to a dataframe
