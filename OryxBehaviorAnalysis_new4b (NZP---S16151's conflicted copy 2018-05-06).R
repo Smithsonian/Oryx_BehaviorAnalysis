@@ -151,7 +151,8 @@ for (i in 2:length(val.xlab)){
 
 # Summarize the activity probabilities....am just using chain 1 here (df1)
 # plot.seq... are indexes to calculate the probability summaries for each of the treatment groups, including the control.
-# The summed probabilities should all sum to 1 across each activity.  This was the whole reason for going to moving to a multinomial regression
+# The summed probabilities should all sum to 1 across each activity
+# This was the whole reason for going to moving to a multinomial regression
 coefs.bhv <- apply(df1[,val.2.plot],2,mean)
 quant.bhv <- apply(df1[,val.2.plot],2,quantile)
 
@@ -164,21 +165,21 @@ control.seq <- seq(1,25,3)
 
 # Now do the same for Trmt 1
 #seq.val1 <- seq(11,35,3)
-plot.seq.Trmt1 <- seq(30,48,3)
-coefs.time2 <- apply(df1[,val.2.plot],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
+plot.seq.Trmt1 <- seq(38,62,3)
+coefs.time2 <- apply(df1[,28:36],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
 (per2.probs <- exp(coefs.time2)/sum(exp(coefs.time2)))
 
 # Which should be the same as
-control.seq1 <- seq(2,20,3)
+control.seq1 <- seq(2,26,3)
 (coefs.bhv.test <- apply(df1[,control.seq1],2,mean))
 
 #seq.val2 <- seq(12,36,3)
-plot.seq.Trmt2 <- seq(31,49,3)
-coefs.time3 <- apply(df1[,val.2.plot],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
+plot.seq.Trmt2 <- seq(39,63,3)
+coefs.time3 <- apply(df1[,28:36],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
 (per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3)))
 
 # Which should be the same as
-control.seq <- seq(3,21,3)
+control.seq <- seq(3,27,3)
 (coefs.bhv.test <- apply(df1[,control.seq],2,mean))
 
 # Look at the probabilities for each time period
@@ -195,15 +196,10 @@ sum(per3.probs)
 # ***********************************************************************
 # ***********************************************************************
 
-# Separate out the probabilities
-# From this, could graph the probability of doing each activity or across each treatment.
-df.prob <- df1[,1:21]
-
-# Separate the alpha and beta coefficients, to compare the effects
-df.test <- df1[,-1:-21]
-testing1 <- df.test[,7] + df.test[,26]
-testing2 <- df.test[,27]
-testing3 <- df.test[,28]
+df.test <- df1[,-1:-27]
+testing1 <- df.test[,9] + df.test[,34]
+testing2 <- df.test[,35]
+testing3 <- df.test[,36]
 
 test <- cbind(testing2,testing3)
 
@@ -212,30 +208,29 @@ test <- as.matrix(test)
 library(MCMCvis)
 
 par(mfrow=c(1,1))
-MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-1.5,1.5))
+MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
 
 # Loop through all the behaviors, creating a graph for each
-Trt1 <- seq(12,27,3)
-Trt2 <- seq(13,28,3)
+Trt1 <- seq(14,35,3)
+Trt2 <- seq(15,36,3)
 val.xlab
 
-par(mfrow=c(1,2))
+for (i in 2:length(Trt1)){
+  testing2 <- df.test[,Trt1[i]]
+  testing3 <- df.test[,Trt2[i]]
+  test <- cbind(testing2,testing3)
+  test <- as.matrix(test)
+  MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-5,5),main=val.xlab[i])
+}
 
-# Extract the values to plot
-testing2 <- df.test[,Trt1]
-testing3 <- df.test[,Trt2]
+# Show all the contrast in Time period 1 (Trmt1)
+df.trmt1 <- df.test[,Trt1]
+MCMCplot(df.trmt1)
+  #, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
 
-# Convert to a matrix
-testing2 <- as.matrix(testing2)
-testing3 <- as.matrix(testing3)
-
-# Plot the results
-MCMCplot(testing2, labels=val.xlab[2:7],xlim=c(-3,3),main="Cntl v Trmt 1", med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
-MCMCplot(testing3, labels = val.xlab[2:7], xlim=c(-3,3),main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
-
-# Place results into a stacked plot to show probabilities in each behavior category.
-
-
+df.trmt2 <- df.test[,Trt2]
+MCMCplot(df.trmt2)
+#, labels=c("Treatment1","Treatment2"),xlim=c(-3.0,3.0))
 
 
 # To graph the differences, need to append to a dataframe
