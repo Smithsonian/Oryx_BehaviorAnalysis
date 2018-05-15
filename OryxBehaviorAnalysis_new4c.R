@@ -25,12 +25,23 @@ library(tidyr)
 # Read in file
 bdata <- read.csv("Behavior.Nov3.csv")
 
+# Let's try to combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
+
+bdata$pro.HU <- bdata$pro.SHU + bdata$pro.FHU
+bdata$pro.HD <- bdata$pro.SHD + bdata$pro.FHD
+
+# Delete and reorganize
+bdata <- bdata[,-c(16,17,21,22)]
+# Reorganize
+bdata <- bdata[,c(1:15,24:25,16:23)]
+
 # Fix the data/time fields
 bdata$TimeStart <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeStart), format="%m/%d/%Y %H:%M"))
 bdata$TimeEnd <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeEnd), format="%m/%d/%Y %H:%M"))
 
 # Re-order dataframe so all the behavior data is at the end
-bdata <- bdata[,c(1:15,26:27,16:25)]
+#bdata <- bdata[,c(1:15,26:27,16:25)]
+bdata <- bdata[,c(1:15,24:25,16:23)]
 
 # Code the Control and Treatment records.
 bdata$Control <- ifelse(bdata$Treatment == "control",1,2) 
@@ -69,17 +80,17 @@ n.adapt=1000 # adaptation iterations
 data.list <- vector("list")
 
 # Reformat data and bind together
-SHU <- as.integer(bdata$ModTotObs*bdata$pro.SHU)
-SHD <- as.integer(bdata$ModTotObs*bdata$pro.SHD)
+HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
+HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
 lay <- as.integer(bdata$ModTotObs*bdata$pro.lay)
 HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
 WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
-FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
-FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
+#FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
+#FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
 SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
 SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
 
-y <- cbind(SHU,SHD,lay,HDSK,WALK,FHU,FHD,SCRATCH,SOCIAL) 
+y <- cbind(HU,HD,lay,HDSK,WALK,SCRATCH,SOCIAL) 
 class(y)
 
 # Setup the data list
@@ -128,10 +139,10 @@ val.xlab <- colnames(y)
 par(mfrow=c(3,2))
 
 # Plot the control probabilities for each behavior to investigate proper exploration of the parameter space
-val.2.plot <- 28:36
+val.2.plot <- 22:28
 #plot.seq <- seq(1,25,3)
-plot.seq.Trmt1 <- seq(2,26,3)
-plot.seq.Trmt2 <- seq(3,27,3)
+#plot.seq.Trmt1 <- seq(2,26,3)
+#plot.seq.Trmt2 <- seq(3,27,3)
 
 for (i in 2:length(val.xlab)){
   # Plot histogram, eliminating burn-in
@@ -159,13 +170,13 @@ quant.bhv <- apply(df1[,val.2.plot],2,quantile)
 (control.probs <- exp(coefs.bhv)/sum(exp(coefs.bhv)))
 sum(control.probs)
 # Which should be the same as
-control.seq <- seq(1,25,3)
+control.seq <- seq(1,19,3)
 (coefs.bhv.test <- apply(df1[,control.seq],2,mean))
 
 # Now do the same for Trmt 1
 #seq.val1 <- seq(11,35,3)
-plot.seq.Trmt1 <- seq(30,48,3)
-coefs.time2 <- apply(df1[,val.2.plot],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
+plot.seq.Trmt1 <- seq(38,62,3)
+coefs.time2 <- apply(df1[,28:36],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
 (per2.probs <- exp(coefs.time2)/sum(exp(coefs.time2)))
 
 # Which should be the same as
@@ -173,8 +184,8 @@ control.seq1 <- seq(2,20,3)
 (coefs.bhv.test <- apply(df1[,control.seq1],2,mean))
 
 #seq.val2 <- seq(12,36,3)
-plot.seq.Trmt2 <- seq(31,49,3)
-coefs.time3 <- apply(df1[,val.2.plot],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
+plot.seq.Trmt2 <- seq(29,48,3)
+coefs.time3 <- apply(df1[,22:28],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
 (per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3)))
 
 # Which should be the same as
@@ -197,13 +208,13 @@ sum(per3.probs)
 
 # Separate out the probabilities
 # From this, could graph the probability of doing each activity or across each treatment.
-df.prob <- df1[,1:21]
+df.prob <- df1[,1:27]
 
 # Separate the alpha and beta coefficients, to compare the effects
-df.test <- df1[,-1:-21]
-testing1 <- df.test[,7] + df.test[,26]
-testing2 <- df.test[,27]
-testing3 <- df.test[,28]
+df.test <- df1[,-1:-27]
+testing1 <- df.test[,9] + df.test[,34]
+testing2 <- df.test[,35]
+testing3 <- df.test[,36]
 
 test <- cbind(testing2,testing3)
 
@@ -215,8 +226,8 @@ par(mfrow=c(1,1))
 MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-1.5,1.5))
 
 # Loop through all the behaviors, creating a graph for each
-Trt1 <- seq(12,27,3)
-Trt2 <- seq(13,28,3)
+Trt1 <- seq(14,35,3)
+Trt2 <- seq(15,36,3)
 val.xlab
 
 par(mfrow=c(1,2))
@@ -230,10 +241,8 @@ testing2 <- as.matrix(testing2)
 testing3 <- as.matrix(testing3)
 
 # Plot the results
-MCMCplot(testing2, labels=val.xlab[2:7],xlim=c(-3,3),main="Cntl v Trmt 1", med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
-MCMCplot(testing3, labels = val.xlab[2:7], xlim=c(-3,3),main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
-
-# Place results into a stacked plot to show probabilities in each behavior category.
+MCMCplot(testing2, labels=val.xlab[2:9],xlim=c(-3,3),main="Cntl v Trmt 1", med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
+MCMCplot(testing3, labels = val.xlab[2:9], xlim=c(-3,3),main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
 
 
 
