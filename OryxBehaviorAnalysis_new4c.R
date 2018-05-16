@@ -82,7 +82,7 @@ data.list <- vector("list")
 # Reformat data and bind together
 HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
 HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
-lay <- as.integer(bdata$ModTotObs*bdata$pro.lay)
+LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
 HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
 WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
 #FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
@@ -90,7 +90,7 @@ WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
 SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
 SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
 
-y <- cbind(HU,HD,lay,HDSK,WALK,SCRATCH,SOCIAL) 
+y <- cbind(HU,HD,LAY,HDSK,WALK,SCRATCH,SOCIAL) 
 class(y)
 
 # Setup the data list
