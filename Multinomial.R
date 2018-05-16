@@ -11,9 +11,8 @@ model{
   }
   
   for (i in 2:3) {    # loop over treatments
-    beta[i, 1] <- 0   # zero contrast for baseline activity
-    #beta[i, 1] ~ dnorm(0, 0.001) # I've put this in so that we get coefficients for the first parameter
-    for (j in 2:n.outcomes){  
+#    beta[i, 1] <- 0   # zero contrast for baseline activity
+    for (j in 1:n.outcomes){  
       beta[i, j] ~ dnorm(0, 0.001)
     } 
   }
