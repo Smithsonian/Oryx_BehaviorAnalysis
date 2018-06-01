@@ -21,5 +21,12 @@ model{
   }
   
   # Derived quantities
-  PROBS <- p   # We actually don't need to re-calculate these, we could just add p to the parameters to monitor or just save this as 'PROBS'
+  for (j in 1:n.outcomes){
+    PROBS[1,j] <- PHI[1,j] / sum(PHI[1,])
+    log(PHI[1,j]) <- alpha[j] + beta[1,j]
+    PROBS[2,j] <- PHI[2,j] / sum(PHI[2,])
+    log(PHI[2,j]) <- alpha[j] + beta[2,j]
+    PROBS[3,j] <- PHI[3,j] / sum(PHI[3,])
+    log(PHI[3,j]) <- alpha[j] + beta[3,j]
+  }
 }
