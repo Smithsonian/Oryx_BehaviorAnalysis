@@ -19,16 +19,16 @@ model{
   }
   
   # tau.j parameters represent inter-individual variation in relative probs. of outcomes
-  tau.j[1] <- 0   # this is a placeholder zero - we always fix the rel. prob. of the reference outcome to zero so there is no inter-indiv. variation for j=1
+  tau.j[1] <- 1   # this is a placeholder zero - we always fix the rel. prob. of the reference outcome to zero so there is no inter-indiv. variation for j=1
   for (j in 2:n.outcomes){  # loop over response outcomes
     tau.j[j] ~ dgamma(1,0.001)  # diffuse gamma prior for precisions (1/variance)
   }
   
   #  DEFINE INDIVIDUAL-LEVEL PARAMETERS
-  for (ind in 1:nind){   # Loop over individuals to define individual-level random effects
-    eps[ind,1] <- 0      # Rel. prob. of reference outcome fixed to zero, so there is no adjustment among indiviuals
+  for (idx in 1:nind){   # Loop over individuals to define individual-level random effects
+    eps[idx,1] <- 0      # Rel. prob. of reference outcome fixed to zero, so there is no adjustment among indiviuals
     for (j in 2:n.outcomes){  # loop over outcomes
-      eps[ind,j] ~ dnorm(0,tau.j[j])  # Adjustment to rel. probs. of each response outcome to account for individual variation
+      eps[idx,j] ~ dnorm(0,tau.j[j])  # Adjustment to rel. probs. of each response outcome to account for individual variation
     }
   }
   
@@ -39,7 +39,7 @@ model{
 
     for (j in 1:n.outcomes) {     # loop around
       p[i,j] <- phi[i,j] / sum(phi[i, ])
-      log(phi[i,j]) <- alpha[j] + beta[PERIOD[i], j] + eps[INDIVIDUAL[i], j]
+      log(phi[i,j]) <- alpha[j] + beta[PERIOD[i], j] + eps[ind[i], j]
     }
   }
   
@@ -51,5 +51,6 @@ model{
     log(PHI[2,j]) <- alpha[j] + beta[2,j]
     PROBS[3,j] <- PHI[3,j] / sum(PHI[3,])
     log(PHI[3,j]) <- alpha[j] + beta[3,j]
+    sigma2[j] <- 1/tau.j[j] 
   }
 }

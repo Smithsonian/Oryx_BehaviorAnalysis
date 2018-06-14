@@ -12,10 +12,13 @@ model{
   # LIKELIHOOD  
   for (i in 1:n) {     # loop over observations
     # Multinomial response
+    # Per activity counts (Y) are distributed multi-nomial with per activity (vector of probabilities - p) and N number of trials
     Y[i, ] ~ dmulti(p[i, ] , N[i])
 
     for (j in 1:n.outcomes) {     # loop around
+      # Converting relative probabilities into actual probabilities (dividing by the sum of all outcomes)
       p[i,j] <- phi[i,j] / sum(phi[i, ])
+      # Log link function
       log(phi[i,j]) <- alpha[period[i],j]
     }
   }
@@ -23,10 +26,10 @@ model{
   # Derived quantities
   for (j in 1:n.outcomes){
     PROBS[1,j] <- PHI[1,j] / sum(PHI[1,])
-    log(PHI[1,j]) <- alpha[j] + beta[1,j]
+    log(PHI[1,j]) <- alpha[1,j]
     PROBS[2,j] <- PHI[2,j] / sum(PHI[2,])
-    log(PHI[2,j]) <- alpha[j] + beta[2,j]
+    log(PHI[2,j]) <- alpha[2,j]
     PROBS[3,j] <- PHI[3,j] / sum(PHI[3,])
-    log(PHI[3,j]) <- alpha[j] + beta[3,j]
+    log(PHI[3,j]) <- alpha[3,j]
   }
 }
