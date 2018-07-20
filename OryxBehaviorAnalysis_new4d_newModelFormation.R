@@ -53,12 +53,12 @@ bdata <- bdata[which(bdata$Treatment != "control"),]
 # Set AdjObTime as a factor 
 # Summarize Standing Head up (SHU)
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
-boxplot(pro.SHU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
+boxplot(pro.HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
 # This does not account for repeated measures. 
 
 # Variables pro.walk and pro.oov both have NAs.  
 # Remove or the variable cannon be included in analysis.
-bdata$RSums <- rowSums(bdata[18:26], na.rm=TRUE)
+bdata$RSums <- rowSums(bdata[18:25], na.rm=TRUE)
 
 summary(bdata$RSums)
 # Some of the rows are < 1.  Set columns to 0.

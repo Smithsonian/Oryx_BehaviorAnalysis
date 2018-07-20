@@ -2,21 +2,27 @@ model{
   
   #  PRIORS
   for (i in 1:3){
-    alpha[i,1] <- 0;   # Here we are fixing the relative probability of the baseline behavior to zero for all time periods (pre/post collar)
-
-    for (j in 2:n.outcomes) {   # loop over response behaviors (HU, HD, Laying, Headshake, etc...)
-      alpha[i,j] ~ dnorm(0, 0.001)   # Here we are assigning diffuse normal priors to the relative probabilities of all behaviors except the reference
+    # Fix the relative probability of the baseline behavior to zero for all time periods (i.e., pre/post collar)
+    alpha[i,1] <- 0;   
+    
+    # Loop over response behaviors (HU, HD, Laying, Headshake, etc...)
+    for (j in 2:n.outcomes) { 
+      # Aassign diffuse normal priors to the relative probabilities of all behaviors except the reference
+      alpha[i,j] ~ dnorm(0, 0.001)
     }
   }
   
-  # LIKELIHOOD  
-  for (i in 1:n) {     # loop over observations
-    # Multinomial response
-    # Per activity counts (Y) are distributed multi-nomial with per activity (vector of probabilities - p) and N number of trials
+  # LIKELIHOOD 
+  # *************************
+  # Loop over all observations
+  for (i in 1:n) {     
+    # Create multinomial response
+    # Per activity, counts (Y) are distributed multi-nomially with per activity (vector of probabilities - p) and N number of trials
     Y[i, ] ~ dmulti(p[i, ] , N[i])
 
-    for (j in 1:n.outcomes) {     # loop around
-      # Converting relative probabilities into actual probabilities (dividing by the sum of all outcomes)
+    # Internal loop through all the outcomes/behaviors at each observation
+    for (j in 1:n.outcomes) {
+      # Convert relative probabilities into actual probabilities (i.e., divide by the sum of all outcomes)
       p[i,j] <- phi[i,j] / sum(phi[i, ])
       # Log link function
       log(phi[i,j]) <- alpha[period[i],j]
