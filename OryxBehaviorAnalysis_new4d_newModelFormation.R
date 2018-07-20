@@ -133,22 +133,40 @@ df1 <- df1[(n.update+1):n.iter,]
 df2 <- df2[(n.update+1):n.iter,]
 df3 <- df3[(n.update+1):n.iter,]
 
-# Setup variables to plot and plotting window
-val.xlab <- colnames(y)
+# Plot the alphas to assess proper exploration of the parameter space
+# The alphas are columns 22:42 in the dataframe
+# The first 3 alphas (reference values) are all zero
+val.2.plot <- 22:42
 
 # Look at the trace plots for all the posterior distributions for the behaviors
 par(mfrow=c(3,2))
 
-# Plot the control probabilities for each behavior to investigate proper exploration of the parameter space
-val.2.plot <- 22:28
-#plot.seq <- seq(1,25,3)
-#plot.seq.Trmt1 <- seq(2,26,3)
-#plot.seq.Trmt2 <- seq(3,27,3)
+# Setup variables to plot and plotting window
+val.xlab <- rep(colnames(y),each=3)
 
-for (i in 2:length(val.xlab)){
+for (i in 1:length(val.2.plot)){
   # Plot histogram, eliminating burn-in
   #print(i)
   hist(df1[,val.2.plot[i]], freq=FALSE, breaks=100, xlim=c(min(df1[,val.2.plot[i]]),max(df1[,val.2.plot[i]])), main= paste0("Posterior Distribution of ",val.xlab[i]), xlab=val.xlab[i])
+  
+  # Overlay posterior distribution
+  lines(density(df1[,val.2.plot[i]],adjust=3),col="black",lwd=2)
+  lines(density(df2[,val.2.plot[i]],adjust=3),col="red",lwd=2)
+  lines(density(df3[,val.2.plot[i]],adjust=3),col="blue",lwd=2)
+  
+  # Plot trace plot
+  plot(df1[,val.2.plot[i]],xlab="Iteration Number",ylab=paste0("Value of "," ",val.xlab[i]),type="l", main="Trace Plot")
+  lines(df2[,val.2.plot[i]],col="red")
+  lines(df3[,val.2.plot[i]],col="blue")
+  abline(a=mean(df1[,val.2.plot[i]]),b=0,col="green")
+}
+
+# Let's look at the probabilities too
+val.2.plot <- 1:21
+
+for (i in 1:length(val.2.plot)){
+  hist(df1[,val.2.plot[i]], freq=FALSE, breaks=100, xlim=c(min(df1[,val.2.plot[i]]),max(df1[,val.2.plot[i]])), main= paste0("Posterior Distribution of ",val.xlab[i]), xlab=val.xlab[i])
+  
   # Overlay posterior distribution
   lines(density(df1[,val.2.plot[i]],adjust=3),col="black",lwd=2)
   lines(density(df2[,val.2.plot[i]],adjust=3),col="red",lwd=2)
@@ -167,48 +185,45 @@ for (i in 2:length(val.xlab)){
 coefs.bhv <- apply(df1[,val.2.plot],2,mean)
 quant.bhv <- apply(df1[,val.2.plot],2,quantile)
 
-# Probability of control activities
-(control.probs <- exp(coefs.bhv)/sum(exp(coefs.bhv)))
-sum(control.probs)
-# Which should be the same as
+# Grab the Probabilities for the controls...just looking at df1 here
 control.seq <- seq(1,19,3)
-(coefs.bhv.test <- apply(df1[,control.seq],2,mean))
-
-# Now do the same for Trmt 1
-#seq.val1 <- seq(11,35,3)
-plot.seq.Trmt1 <- seq(30,49,3)
-coefs.time2 <- apply(df1[,22:28],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
-(per2.probs <- exp(coefs.time2)/sum(exp(coefs.time2)))
+(coefs.bhv.cntl <- apply(df1[,control.seq],2,mean))
+if(sum(coefs.bhv.cntl) == 1) "ALL SET" else "THERE IS A PROBLEM"
 
 # Which should be the same as
 control.seq1 <- seq(2,20,3)
-(coefs.bhv.test <- apply(df1[,control.seq1],2,mean))
-
-#seq.val2 <- seq(12,36,3)
-plot.seq.Trmt2 <- seq(31,49,3)
-coefs.time3 <- apply(df1[,22:28],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
-(per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3)))
+(coefs.bhv.Trt1 <- apply(df1[,control.seq1],2,mean))
+if(sum(coefs.bhv.Trt1) == 1) "ALL SET" else "THERE IS A PROBLEM"
 
 # Which should be the same as
-control.seq <- seq(3,21,3)
-(coefs.bhv.test <- apply(df1[,control.seq],2,mean))
+control.seq2 <- seq(3,21,3)
+(coefs.bhv.Trt2 <- apply(df1[,control.seq2],2,mean))
+if(sum(coefs.bhv.Trt2) == 1) "ALL SET" else "THERE IS A PROBLEM"
 
 # Look at the probabilities for each time period
 colnames(y)
-control.probs
-per2.probs
-per3.probs
 
 # Probabilities should add up to 1
-sum(control.probs)
-sum(per2.probs)
-sum(per3.probs)
+sum(coefs.bhv.cntl)
+sum(coefs.bhv.Trt1)
+sum(coefs.bhv.Trt2)
 
 # ***********************************************************************
 # ***********************************************************************
 
 # Separate out the probabilities
 # From this, could graph the probability of doing each activity or across each treatment.
+
+df.prob <- df1[,25:27]
+test <- as.matrix(df.prob)
+
+library(MCMCvis)
+
+par(mfrow=c(1,1))
+MCMCplot(test, labels=c("Treatment1","Treatment2","Treatment3"),xlim=c(-0.5,0.5))
+
+
+
 df.prob <- df1[,1:21]
 
 # Separate the alpha and beta coefficients, to compare the effects
