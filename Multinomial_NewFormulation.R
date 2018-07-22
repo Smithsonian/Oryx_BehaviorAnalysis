@@ -7,7 +7,7 @@ model{
     
     # Loop over response behaviors (HU, HD, Laying, Headshake, etc...)
     for (j in 2:n.outcomes) { 
-      # Aassign diffuse normal priors to the relative probabilities of all behaviors except the reference
+      # Assign diffuse normal priors to the relative probabilities of all behaviors except the reference
       alpha[i,j] ~ dnorm(0, 0.001)
     }
   }

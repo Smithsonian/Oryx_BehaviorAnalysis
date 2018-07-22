@@ -211,20 +211,40 @@ sum(coefs.bhv.Trt2)
 # ***********************************************************************
 # ***********************************************************************
 
-# Separate out the probabilities
-# From this, could graph the probability of doing each activity or across each treatment.
+# Do a test on the alphas and probabilities for HD
+# How do they compare?
+# Unable to compare the alphas with the probabilities, since alpha '0' is the reference category
 
+# Pull out values from the data frame
 df.prob <- df1[,25:27]
+
+df.prob$Trmt1 <- df.prob[,1] - df.prob[,2]
+df.prob$Trmt2 <- df.prob[,1] - df.prob[,3]
+df.prob <- df.prob[,4:5]
+
 test <- as.matrix(df.prob)
 
 library(MCMCvis)
 
-par(mfrow=c(1,1))
-MCMCplot(test, labels=c("Treatment1","Treatment2","Treatment3"),xlim=c(-0.5,0.5))
+par(mfrow=c(1,2))
+MCMCplot(test, labels=c("Treatment1","Treatment2"))
+
+# Do the same thing with the probabilities
+df.prob <- df1[,4:6]
+df.prob$Trmt1 <- df.prob[,1] - df.prob[,2]
+df.prob$Trmt2 <- df.prob[,1] - df.prob[,3]
+df.prob <- df.prob[,4:5]
+
+test <- as.matrix(df.prob)
+MCMCplot(test, labels=c("Treatment1","Treatment2"))
 
 
 
-df.prob <- df1[,1:21]
+
+
+
+
+
 
 # Separate the alpha and beta coefficients, to compare the effects
 df.test <- df1[,-1:-21]
