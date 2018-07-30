@@ -70,12 +70,12 @@ summary(bdata)
 # ***********************************************************************
 
 # Load library
-library(R2jags)
+library(jagsUI)
 
 # Set-up burn-in/iterations for JAGS
-n.iter=10000 # Number of iterations
+n.iter=100000 # Number of iterations
 n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
-n.adapt=1000 # adaptation iterations
+#n.adapt=1000 # adaptation iterations
 
 # Set up blank list
 data.list <- vector("list")
@@ -99,7 +99,7 @@ data.list=list(
   Y = y, 
   n.outcomes = ncol(y),
   #ID = as.numeric(bdata$Animal),
-  PERIOD = bdata$AdjObTime,
+  PERIOD = as.numeric(bdata$AdjObTime),
   N = apply(y,1,sum),
   #n.groups = length(unique(bdata$Animal)),
   n = nrow(y),
@@ -108,32 +108,22 @@ data.list=list(
 )
 
 # Fit model
-jm2=jags.model("Multinomial_withREs.R",data=data.list,n.chains=3,n.adapt=n.adapt)
-update(jm2, n.iter=n.update) # Burn-in the chain
-zm2=coda.samples(jm2,variable.names=c("alpha","beta","sigma2","PROBS"), n.iter=n.iter, n.thin=1)
-# generate the coda object
+jm2=jags(model.file = "Multinomial_withREs.R",
+         data=data.list,
+         n.chains=3,n.iter=n.iter,n.thin=20,parallel = T,
+         parameters.to.save = c("alpha","beta","tau.j","PROBS","eps"))
 
-# Deviance Information Criteria
-zdic=dic.samples(jm2,n.iter=n.iter)
-zdic
 
 # Summarize object
 print("*********************************************************************")
-print(summary(zm2))
+jm2
 
-# Run convergence diagnostics
-gelman.diag(zm2, multivariate=FALSE)
 
-# Need to create the dataframes from the code objects
-# Plot the histograms and trace plots to examine and make sure that the parameter space has been explored
-df1 = as.data.frame(rbind(zm2[[1]]))
-df2 = as.data.frame(rbind(zm2[[2]]))
-df3 = as.data.frame(rbind(zm2[[3]]))
 
-# Remove the burn-in period
-df1 <- df1[(n.update+1):n.iter,]
-df2 <- df2[(n.update+1):n.iter,]
-df3 <- df3[(n.update+1):n.iter,]
+
+
+
+
 
 # Setup variables to plot and plotting window
 val.xlab <- colnames(y)
