@@ -31,10 +31,13 @@ bdata <- read.csv("Behavior.Nov3.csv")
 bdata$pro.HU <- bdata$pro.SHU + bdata$pro.FHU
 bdata$pro.HD <- bdata$pro.SHD + bdata$pro.FHD
 
+bdata$pro.walk[is.na(bdata$pro.walk)] <- 0
+bdata$pro.Loco <- bdata$pro.walk + bdata$pro.social
+
 # Delete and reorganize
-bdata <- bdata[,-c(16,17,21,22)]
+bdata <- bdata[,-c(16,17,20,21,22,24)]
 # Reorganize
-bdata <- bdata[,c(1:15,24:25,16:23)]
+bdata <- bdata[,c(1:15,22:24,16:21)]
 
 # Fix the data/time fields
 bdata$TimeStart <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeStart), format="%m/%d/%Y %H:%M"))
@@ -42,7 +45,7 @@ bdata$TimeEnd <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeEnd), forma
 
 # Re-order dataframe so all the behavior data is at the end
 #bdata <- bdata[,c(1:15,26:27,16:25)]
-bdata <- bdata[,c(1:15,24:25,16:23)]
+bdata <- bdata[,c(1:15,23:24,16:22)]
 
 # Code the Control and Treatment records.
 bdata$Control <- ifelse(bdata$Treatment == "control",1,2) 
@@ -53,16 +56,15 @@ bdata <- bdata[which(bdata$Treatment != "control"),]
 # Set AdjObTime as a factor 
 # Summarize Standing Head up (SHU)
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
-boxplot(pro.SHU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
+boxplot(pro.HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
 # This does not account for repeated measures. 
 
 # Variables pro.walk and pro.oov both have NAs.  
 # Remove or the variable cannon be included in analysis.
-bdata$RSums <- rowSums(bdata[18:26], na.rm=TRUE)
+bdata$RSums <- rowSums(bdata[18:24], na.rm=TRUE)
 
 summary(bdata$RSums)
 # Some of the rows are < 1.  Set columns to 0.
-bdata$pro.walk[is.na(bdata$pro.walk)] <- 0
 bdata$pro.oov[is.na(bdata$pro.oov)] <- 0
 summary(bdata)
 
@@ -83,15 +85,16 @@ data.list <- vector("list")
 # Reformat data and bind together
 HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
 HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
-LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
+#LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
 HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
 WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
+LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
 #FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
 #FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
 SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
-SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
+#SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
 
-y <- cbind(HU,HD,LAY,HDSK,WALK,SCRATCH,SOCIAL) 
+y <- cbind(HU,HD,HDSK,WALK,LOCO,SCRATCH) 
 class(y)
 
 # Setup the data list
