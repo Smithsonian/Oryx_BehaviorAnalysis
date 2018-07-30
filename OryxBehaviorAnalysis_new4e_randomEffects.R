@@ -118,6 +118,16 @@ jm2=jags(model.file = "Multinomial_withREs.R",
 print("*********************************************************************")
 jm2
 
+# eps are the individual randing effects
+# tau.j's are the random effects for each behavior
+# Likely want to graph the probabilities, or at least those that are interesting.
+# Then have a table of all the probabilities, inclusive of credible intervals
+# Use the HDInterval package, to more appropriately calculate the credible intervals on posterior distributions that might be skewed
+library(HDInterval)
+# Interesting to view the alpha's and the tau.j random effects (Precision).  These can be converted by divided by the inverse to get the variances.  Will provide strength of coefficients estimates, along with variance around estimates.
+
+# Graph the Probabilities
+#
 
 
 
