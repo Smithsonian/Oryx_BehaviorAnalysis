@@ -116,6 +116,9 @@ jm2=jags(model.file = "Multinomial_NewFormulation.R",
 print("*********************************************************************")
 jm2
 
+par(mar=c(1,1,1,1))
+plot(jm2)
+
 # Look at traceplots to determine if proper exploration of the parameter space has occurred.
 traceplot(jm2)
 
@@ -126,6 +129,8 @@ whiskerplot(jm2, parameters='alpha[4:21]')
 
 jm2$mean
 jm2$summary
+
+hist(jm2$sims.list$alpha[,1,2])
 
 
 
