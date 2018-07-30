@@ -74,9 +74,9 @@ summary(bdata)
 library(jagsUI)
 
 # Set-up burn-in/iterations for JAGS
-n.iter=10000 # Number of iterations
+n.iter=1000 # Number of iterations
 n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
-n.adapt=1000 # adaptation iterations
+#n.adapt=1000 # adaptation iterations
 
 # Set up blank list
 data.list <- vector("list")
@@ -109,7 +109,7 @@ data.list=list(
 # Fit model
 jm2=jags(model.file = "Multinomial_NewFormulation.R",
          data=data.list,
-         n.chains=3,n.adapt=n.adapt,n.iter=n.iter,n.thin=1,
+         n.chains=3,n.iter=n.iter,n.thin=1,
          parameters.to.save = c("alpha","PROBS"))
 
 # Summarize object
@@ -120,7 +120,9 @@ par(mar=c(1,1,1,1))
 plot(jm2)
 
 # Look at traceplots to determine if proper exploration of the parameter space has occurred.
+par(ask=FALSE)
 traceplot(jm2)
+traceplot(jm2, parameters = 'PROBS[1:3]')
 
 par(mfrow=c(2,1))
 
@@ -131,6 +133,9 @@ jm2$mean
 jm2$summary
 
 hist(jm2$sims.list$alpha[,1,2])
+
+
+
 
 
 
