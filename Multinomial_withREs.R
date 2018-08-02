@@ -19,17 +19,18 @@ model{
   }
   
   # tau.j parameters represent inter-individual variation in relative probs. of outcomes
-  tau.j[1] <- 1   # this is a placeholder zero - we always fix the rel. prob. of the reference outcome to zero so there is no inter-indiv. variation for j=1
-  for (j in 2:n.outcomes){  # loop over response outcomes
-    tau.j[j] ~ dgamma(1,0.001)  # diffuse gamma prior for precisions (1/variance)
+  for (j in 1:n.outcomes){  # loop over response outcomes
+    mu.re[j] <- 0           # mean of individual random effects is 0
   }
   
+  ## priors for elements of precision matrix
+  prec[1:6,1:6] ~ dwish(R[,],6)
+  sigma[1:6,1:6] <- inverse(prec[,])    # convert precision to covariance matrix
+  #  rho <- sigma[1,2]/sqrt(sigma[1,1]*sigma[2,2])  # correlation between outcome 1 and 2
+  
   #  DEFINE INDIVIDUAL-LEVEL PARAMETERS
-  for (idx in 1:nind){   # Loop over individuals to define individual-level random effects
-    eps[idx,1] <- 0      # Rel. prob. of reference outcome fixed to zero, so there is no adjustment among indiviuals
-    for (j in 2:n.outcomes){  # loop over outcomes
-      eps[idx,j] ~ dnorm(0,tau.j[j])  # Adjustment to rel. probs. of each response outcome to account for individual variation
-    }
+  for (idx in 1:nind){        # Loop over individuals to define individual-level random effects
+    eps[idx,1:6] ~ dmnorm(mu.re[], prec[,])      # Rel. prob. of reference outcome fixed to zero, so there is no adjustment among indiviuals
   }
   
   # LIKELIHOOD  
@@ -51,6 +52,5 @@ model{
     log(PHI[2,j]) <- alpha[j] + beta[2,j]
     PROBS[3,j] <- PHI[3,j] / sum(PHI[3,])
     log(PHI[3,j]) <- alpha[j] + beta[3,j]
-    sigma2[j] <- 1/tau.j[j] 
   }
 }

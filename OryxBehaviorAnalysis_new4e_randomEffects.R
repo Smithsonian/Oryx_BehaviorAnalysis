@@ -97,6 +97,11 @@ SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
 y <- cbind(HU,HD,LAY,HDSK,LOCO,SCRATCH) 
 class(y)
 
+R <- matrix(0,nrow=7,ncol=7)
+for (i in 1:7){
+  R[i,i] <- 0.1
+}
+
 # Setup the data list
 data.list=list(
   Y = y, 
@@ -107,7 +112,8 @@ data.list=list(
   #n.groups = length(unique(bdata$Animal)),
   n = nrow(y),
   ind = as.numeric(droplevels(bdata$Animal)),
-  nind = length(unique(bdata$Animal))
+  nind = length(unique(bdata$Animal)),
+  R = R
 )
 
 # Fit model
