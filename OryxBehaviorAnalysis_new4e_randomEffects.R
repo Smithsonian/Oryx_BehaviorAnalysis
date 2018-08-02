@@ -97,8 +97,9 @@ SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
 y <- cbind(HU,HD,LAY,HDSK,LOCO,SCRATCH) 
 class(y)
 
-R <- matrix(0,nrow=7,ncol=7)
-for (i in 1:7){
+# Create matrix for inverse Wishart prior on individual random effects
+R <- matrix(0,nrow=6,ncol=6)
+for (i in 1:6){
   R[i,i] <- 0.1
 }
 
@@ -120,7 +121,7 @@ data.list=list(
 jm2=jags(model.file = "Multinomial_withREs.R",
          data=data.list,
          n.chains=3,n.iter=n.iter,n.thin=20,parallel = T,
-         parameters.to.save = c("alpha","beta","tau.j","PROBS","eps"))
+         parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
 
 
 # Summarize object
