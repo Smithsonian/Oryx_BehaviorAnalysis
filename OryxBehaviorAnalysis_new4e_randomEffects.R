@@ -117,8 +117,12 @@ data.list=list(
 # Fit model
 jm2=jags(model.file = "Multinomial_withREs.R",
          data=data.list,
-         n.chains=3,n.iter=n.iter,n.thin=20,parallel = T,
+         n.chains=3,n.iter=n.iter,n.thin=20,parallel = F,
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
+
+# Save the jags model
+#save(jm2, file = "Behavior_Models.Rda")
+load("Behavior_Models.Rda")
 
 # Summarize object
 print("*********************************************************************")
