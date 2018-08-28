@@ -72,7 +72,7 @@ summary(bdata)
 library(jagsUI)
 
 # Set-up burn-in/iterations for JAGS
-n.iter=100000 # Number of iterations
+n.iter=500000 # Number of iterations
 n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
 #n.adapt=1000 # adaptation iterations
 
@@ -117,16 +117,17 @@ data.list=list(
 # Fit model
 jm2=jags(model.file = "Multinomial_withREs.R",
          data=data.list,
-         n.chains=3,n.iter=n.iter,n.thin=20,parallel = F,
+         n.chains=3,n.iter=n.iter,n.thin=20,parallel = T,
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
-
 
 # Summarize object
 print("*********************************************************************")
 jm2
 
+# Look at the variance/covariance matrix
 image(jm2$mean$sigma)
 
+# Converting variance/covariance to correlation matrix
 rho <- matrix(NA,6,6)
 for (i in 1:6){
   for (j in 1:6){
@@ -176,6 +177,7 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
                                    size = 12, hjust = 1))+
   coord_fixed()
+
 # Print the heatmap
 print(ggheatmap)
 
