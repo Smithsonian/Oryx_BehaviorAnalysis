@@ -23,8 +23,7 @@ library(tidyr)
 # Read in file
 bdata <- read.csv("Behavior.Nov3.csv")
 
-# Let's try to combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
-
+# Let's combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
 bdata$pro.HU <- bdata$pro.SHU + bdata$pro.FHU
 bdata$pro.HD <- bdata$pro.SHD + bdata$pro.FHD
 
@@ -172,6 +171,7 @@ for (i in 1:6){
   }
 }
 
+# Specify column names
 rownames(rho) <- colnames(rho) <- c("HU","HD","LAY","HDSK","LOCO","SCRATCH")
 
 # Get lower triangle of the correlation matrix
@@ -179,16 +179,19 @@ get_lower_tri<-function(cormat){
   cormat[upper.tri(cormat)] <- NA
   return(cormat)
 }
+
 # Get upper triangle of the correlation matrix
 get_upper_tri <- function(cormat){
   cormat[lower.tri(cormat)]<- NA
   return(cormat)
 }
+
 upper_tri <- get_upper_tri(rho)
 upper_tri
 
 # Melt the correlation matrix
 library(reshape2)
+library(ggplot2)
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 names(melted_cormat) <- c("Behavior1", "Behavior2", "value")
 
@@ -198,11 +201,14 @@ reorder_cormat <- function(cormat){
   hc <- hclust(dd)
   cormat <-cormat[hc$order, hc$order]
 }
+
 # Reorder the correlation matrix
 rho <- reorder_cormat(rho)
 upper_tri <- get_upper_tri(rho)
+
 # Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
 # Create a ggheatmap
 ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
   geom_tile(color = "white")+
@@ -227,31 +233,71 @@ ggheatmap +
     panel.background = element_blank(),
     axis.ticks = element_blank(),
     legend.justification = c(1, 0),
-    legend.position = c(0.5, 0.8),
+    legend.position = c(0.4, 0.7),
     legend.direction = "horizontal")+
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
 
-# eps are the individual randing effects
+# eps are the individual random effects
 # tau.j's are the random effects for each behavior
 # Likely want to graph the probabilities, or at least those that are interesting.
 # Then have a table of all the probabilities, inclusive of credible intervals
+
 # Use the HDInterval package, to more appropriately calculate the credible intervals on posterior distributions that might be skewed
 library(HDInterval)
-# Interesting to view the alpha's and the tau.j random effects (Precision).  These can be converted by divided by the inverse to get the variances.  Will provide strength of coefficients estimates, along with variance around estimates.
+# Interesting to view the alpha's and the tau.j random effects (Precision).  
+# These can be converted by divided by the inverse to get the variances.  
+# Will provide strength of coefficients estimates, along with variance around estimates.
 
 # Graph the Probabilities
 #
 
 
+head(jm2$sims.list$PROBS)
+ncol(jm2$sims.list$PROBS)
+
+# Look at traceplots to determine if proper exploration of the parameter space has occurred.
+par(ask=FALSE)
+traceplot(jm2)
+traceplot(jm2, parameters = 'PROBS[1:3]')
+
+par(mfrow=c(2,1))
+
+whiskerplot(jm2, parameters='PROBS')
+
+jm2$mean
+jm2$summary
+
+library(MCMCvis)
+# Look at trace and density plots to assess model convergence
+MCMCtrace(jm2, params = 'PROBS', ind=TRUE, pdf=FALSE)
+temp <- rep('First Param', 18)
+
+MCMCplot(jm2, params = 'PROBS', ref=NULL, xlab='ESTIMATE', main = "MCMCvis plot", labels = temp)
+
+ex2 <- MCMCchains(jm2, params = 'alpha', excl = 'alpha\\[1\\]', mcmc.list = TRUE, ISB = FALSE)
+ex2 <- MCMCchains(jm2, params = c('alpha\\[2\\]','alpha\\[3\\]','alpha\\[4\\]'), mcmc.list = TRUE, ISB = FALSE)
+MCMCplot(ex2)
+ex2 <- MCMCchains(jm2, params = 'beta\\[1\\]', mcmc.list = TRUE, ISB = FALSE)
 
 
+ex2 <- MCMCchains(jm2, params = 'PROBS\\[1,1\\]', mcmc.list = TRUE, ISB = FALSE)
+MCMCplot(jm2, params = c('alpha\\[2\\]', 'alpha\\[4\\]', 'alpha\\[3\\]'), ISB=FALSE, main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1)
 
 
+ex2 <- MCMCchains(jm2, params = 'alpha\\[2\\]', mcmc.list = TRUE, ISB = FALSE)
+MCMCplot(jm2, params = c('alpha\\[2\\]', 'alpha\\[4\\]', 'alpha\\[3\\]'), ISB=FALSE, labels = c('whatever 1','whatever 2','whatever 3'))
+         
+
+MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ISB=FALSE, ref_ovl = FALSE)
+
+MCMCplot(jm2, params = 'PROBS')
+MCMCsummary(ex2)
+
+MCMCplot(jm2, params = c('PROBS\\[1,1\\]', 'PROBS\\[2,1\\]', 'PROBS\\[3,1\\]'), ISB=FALSE, ref_ovl = FALSE)
 
 
-
-
+par(mfrow=c(1,2))
 
 
 
