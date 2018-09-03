@@ -44,26 +44,58 @@ bdata$TimeEnd <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeEnd), forma
 #bdata <- bdata[,c(1:15,26:27,16:25)]
 bdata <- bdata[,c(1:15,23:24,16:22)]
 
-# Code the Control and Treatment records.
+# Remove any rows where variables of interest (columns 18:24) have NAs
+# These are all the oov (Out of View) records, so doesn't really matter, since not included in analysis.
+# Set to Zero
+bdata[18:24][is.na(bdata[18:24])] <- 0
+
+bdata$RSums <- rowSums(bdata[18:24])
+summary(bdata$RSums)
+
+# Reformat data and bind together
+bdata$HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
+bdata$HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
+bdata$LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
+bdata$HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
+#WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
+bdata$LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
+#FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
+#FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
+bdata$SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
+bdata$OOV <- as.integer(bdata$ModTotObs*bdata$pro.oov)
+#SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
+
+# Re-Order
+bdata <- bdata[,c(1:17,26:32,25)]
+
+# ************************************
+# ************************************
+
+# Write to a new file.  This will be the file that is shared
+write.csv(bdata, file = "bdata.csv")
+
+# ***********************************************************************
+# ***********************************************************************
+
+# Read in file
+# Some of the factors (Feeding Head-Up + Standing Head-Up have already been collapsed (Head-Up))
+bdata <- read.csv("bdata.csv", header=T, sep=",", row.names=1)
+
+# View data
+head(bdata)
+
+# Set/Update the data/time fields
+bdata$TimeStart <- as.POSIXct(bdata$TimeStart, format="%Y-%m-%d %H:%M")
+bdata$TimeEnd <- as.POSIXct(bdata$TimeEnd, format="%Y-%m-%d %H:%M")
+
+# Code the Control and Treatment records
+# Remove the Control, too few to be useful
 bdata$Control <- ifelse(bdata$Treatment == "control",1,2) 
 bdata.control <- bdata[which(bdata$Treatment == "control"),]
 bdata <- bdata[which(bdata$Treatment != "control"),]
 
-# Look at data quickly
 # Set AdjObTime as a factor 
-# Summarize Standing Head up (SHU)
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
-boxplot(pro.HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
-# This does not account for repeated measures. 
-
-# Variables pro.walk and pro.oov both have NAs.  
-# Remove or the variable cannon be included in analysis.
-bdata$RSums <- rowSums(bdata[18:24], na.rm=TRUE)
-
-summary(bdata$RSums)
-# Some of the rows are < 1.  Set columns to 0.
-bdata$pro.oov[is.na(bdata$pro.oov)] <- 0
-summary(bdata)
 
 # ***********************************************************************
 # ***********************************************************************
@@ -80,18 +112,18 @@ n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
 data.list <- vector("list")
 
 # Reformat data and bind together
-HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
-HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
-LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
-HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
+##HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
+##HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
+##LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
+##HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
 #WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
-LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
+##LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
 #FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
 #FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
-SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
+##SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
 #SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
 
-y <- cbind(HU,HD,LAY,HDSK,LOCO,SCRATCH) 
+y <- cbind(bdata$HU,bdata$HD,bdata$LAY,bdata$HDSK,bdata$LOCO,bdata$SCRATCH) 
 class(y)
 
 # Create matrix for inverse Wishart prior on individual random effects
