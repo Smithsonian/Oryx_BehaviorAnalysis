@@ -285,16 +285,45 @@ ex2 <- MCMCchains(jm2, params = 'PROBS\\[1,1\\]', mcmc.list = TRUE, ISB = FALSE)
 MCMCplot(jm2, params = c('alpha\\[2\\]', 'alpha\\[4\\]', 'alpha\\[3\\]'), ISB=FALSE, main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1)
 
 
-ex2 <- MCMCchains(jm2, params = 'alpha\\[2\\]', mcmc.list = TRUE, ISB = FALSE)
-MCMCplot(jm2, params = c('alpha\\[2\\]', 'alpha\\[4\\]', 'alpha\\[3\\]'), ISB=FALSE, labels = c('whatever 1','whatever 2','whatever 3'))
-         
-
-MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ISB=FALSE, ref_ovl = FALSE)
-
 MCMCplot(jm2, params = 'PROBS')
 MCMCsummary(ex2)
 
-MCMCplot(jm2, params = c('PROBS\\[1,1\\]', 'PROBS\\[2,1\\]', 'PROBS\\[3,1\\]'), ISB=FALSE, ref_ovl = FALSE)
+par(mfrow=c(2,3))
+
+main.label <- c("Head-Up", "Head-Down", "Laying", "Head-Shake", "Locomotion", "Scratch")
+
+Post.Summary <- MCMCsummary(jm2, params = 'PROBS', Rhat = TRUE, n.eff = TRUE, func = function(x) median(x), func_name = 'median')
+# Head-Up
+MCMCplot(jm2, params = c('PROBS\\[1,1\\]', 'PROBS\\[2,1\\]', 'PROBS\\[3,1\\]'), ref = Post.Summary[1,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[1],col='blue',
+         med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
+         labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability")
+MCMCplot(jm2, params = c('PROBS\\[1,2\\]', 'PROBS\\[2,2\\]', 'PROBS\\[3,2\\]'), ref = Post.Summary[4,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[2],
+         med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
+         labels=NULL, xlab="Probability")
+MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[3],
+         med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
+         labels=NULL, xlab="Probability")
+
+MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[4],
+         med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
+         labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability")
+MCMCplot(jm2, params = c('PROBS\\[1,5\\]', 'PROBS\\[2,5\\]', 'PROBS\\[3,5\\]'), ref = Post.Summary[13,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[5],
+         med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
+         labels=NULL, xlab="Probability")
+MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[6],
+         med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
+         labels=NULL, xlab="Probability")
+
+
+
+
+
 
 
 par(mfrow=c(1,2))
