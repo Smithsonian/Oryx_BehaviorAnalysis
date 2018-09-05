@@ -335,14 +335,9 @@ MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), 
 dev.off()
 
 # And to only show the graphs where a change occurred
-#png('PROBS_variables.png')
 outfile = 'PROBS_variables.png'
-#dev.new(width=5, height=1)
-#par(mfrow=c(1,3))
-
 png(file = outfile,width=1000, height=300)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=c(1,1))
-#par(mar=c(5.1,4.1,4.1,5.1))
 
 MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = FALSE, ISB=FALSE, 
          main=main.label[3],col='blue',
