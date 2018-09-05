@@ -28,6 +28,8 @@ library(MCMCvis)
 bdata <- read.csv("Behavior.Nov3.csv")
 
 # Let's combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
+# Let's try to combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
+
 bdata$pro.HU <- bdata$pro.SHU + bdata$pro.FHU
 bdata$pro.HD <- bdata$pro.SHD + bdata$pro.FHD
 
@@ -93,6 +95,7 @@ bdata$TimeEnd <- as.POSIXct(bdata$TimeEnd, format="%Y-%m-%d %H:%M")
 
 # Code the Control and Treatment records
 # Remove the Control, too few to be useful
+# Code the Control and Treatment records.
 bdata$Control <- ifelse(bdata$Treatment == "control",1,2) 
 bdata.control <- bdata[which(bdata$Treatment == "control"),]
 bdata <- bdata[which(bdata$Treatment != "control"),]
@@ -100,8 +103,27 @@ bdata <- bdata[which(bdata$Treatment != "control"),]
 # Set AdjObTime as a factor 
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 
+# Look at data quickly
+# Set AdjObTime as a factor 
+# Summarize Standing Head up (SHU)
+bdata$AdjObTime <- as.factor(bdata$AdjObTime)
+boxplot(pro.HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
+# This does not account for repeated measures. 
+
+# Variables pro.walk and pro.oov both have NAs.  
+# Remove or the variable cannon be included in analysis.
+bdata$RSums <- rowSums(bdata[18:24], na.rm=TRUE)
+
+summary(bdata$RSums)
+# Some of the rows are < 1.  Set columns to 0.
+bdata$pro.oov[is.na(bdata$pro.oov)] <- 0
+summary(bdata)
+
 # ***********************************************************************
 # ***********************************************************************
+
+# Load library
+library(jagsUI)
 
 # Set-up burn-in/iterations for JAGS
 n.iter=100000 # Number of iterations
@@ -124,6 +146,19 @@ data.list <- vector("list")
 #SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
 
 y <- cbind(bdata$HU,bdata$HD,bdata$LAY,bdata$HDSK,bdata$LOCO,bdata$SCRATCH) 
+
+HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
+HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
+LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
+HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
+#WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
+LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
+#FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
+#FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
+SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
+#SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
+
+y <- cbind(HU,HD,LAY,HDSK,LOCO,SCRATCH) 
 class(y)
 
 # Create matrix for inverse Wishart prior on individual random effects
@@ -152,26 +187,20 @@ jm2=jags(model.file = "Multinomial_withREs.R",
          n.chains=3,n.iter=n.iter,n.thin=20,parallel = F,
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
 
-<<<<<<< HEAD
 # Save the jags model
 # *********************************
 # *********************************
 
 #save(jm2, file = "Behavior_Models.Rda")
 load("Behavior_Models.Rda")
-=======
->>>>>>> parent of 39dbb45... Adding save Rdata file so that full model doesn't need to be run.
 
 # Summarize object
 print("*********************************************************************")
 jm2
 
-<<<<<<< HEAD
 # *********************************
 # *********************************
 # Look at the variance/covariance matrix
-=======
->>>>>>> parent of 39dbb45... Adding save Rdata file so that full model doesn't need to be run.
 image(jm2$mean$sigma)
 
 rho <- matrix(NA,6,6)
@@ -201,6 +230,8 @@ upper_tri <- get_upper_tri(rho)
 upper_tri
 
 # Melt the correlation matrix
+library(reshape2)
+
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 names(melted_cormat) <- c("Behavior1", "Behavior2", "value")
 
@@ -215,6 +246,12 @@ reorder_cormat <- function(cormat){
 rho <- reorder_cormat(rho)
 upper_tri <- get_upper_tri(rho)
 
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+# Reorder the correlation matrix
+rho <- reorder_cormat(rho)
+upper_tri <- get_upper_tri(rho)
 # Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
@@ -243,6 +280,7 @@ ggheatmap +
     axis.ticks = element_blank(),
     legend.justification = c(1, 0),
     legend.position = c(0.4, 0.7),
+    legend.position = c(0.5, 0.8),
     legend.direction = "horizontal")+
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
