@@ -19,6 +19,10 @@ rm(list=ls())
 
 # Load necessary libraries
 library(tidyr)
+library(reshape2)
+library(ggplot2)
+library(jagsUI)
+library(MCMCvis)
 
 # Read in file
 bdata <- read.csv("Behavior.Nov3.csv")
@@ -99,9 +103,6 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 # ***********************************************************************
 # ***********************************************************************
 
-# Load library
-library(jagsUI)
-
 # Set-up burn-in/iterations for JAGS
 n.iter=500000 # Number of iterations
 n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
@@ -152,6 +153,9 @@ jm2=jags(model.file = "Multinomial_withREs.R",
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
 
 # Save the jags model
+# *********************************
+# *********************************
+
 #save(jm2, file = "Behavior_Models.Rda")
 load("Behavior_Models.Rda")
 
@@ -159,6 +163,8 @@ load("Behavior_Models.Rda")
 print("*********************************************************************")
 jm2
 
+# *********************************
+# *********************************
 # Look at the variance/covariance matrix
 image(jm2$mean$sigma)
 
@@ -190,8 +196,6 @@ upper_tri <- get_upper_tri(rho)
 upper_tri
 
 # Melt the correlation matrix
-library(reshape2)
-library(ggplot2)
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 names(melted_cormat) <- c("Behavior1", "Behavior2", "value")
 
@@ -223,6 +227,7 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
 # Print the heatmap
 print(ggheatmap)
 
+# Print Again with values and a few items cleaned up
 ggheatmap + 
   geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
   theme(
@@ -238,6 +243,9 @@ ggheatmap +
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
 
+# *********************************
+# *********************************
+
 # eps are the individual random effects
 # tau.j's are the random effects for each behavior
 # Likely want to graph the probabilities, or at least those that are interesting.
@@ -250,205 +258,103 @@ library(HDInterval)
 # Will provide strength of coefficients estimates, along with variance around estimates.
 
 # Graph the Probabilities
-#
+# *********************************
+# *********************************
 
-
-head(jm2$sims.list$PROBS)
-ncol(jm2$sims.list$PROBS)
-
-# Look at traceplots to determine if proper exploration of the parameter space has occurred.
-par(ask=FALSE)
-traceplot(jm2)
-traceplot(jm2, parameters = 'PROBS[1:3]')
-
-par(mfrow=c(2,1))
-
-whiskerplot(jm2, parameters='PROBS')
-
+# Investigate values in output
 jm2$mean
-jm2$summary
 
-library(MCMCvis)
 # Look at trace and density plots to assess model convergence
+# Here, individual (ind) has been turned on to TRUE to draw each line
 MCMCtrace(jm2, params = 'PROBS', ind=TRUE, pdf=FALSE)
-temp <- rep('First Param', 18)
 
-MCMCplot(jm2, params = 'PROBS', ref=NULL, xlab='ESTIMATE', main = "MCMCvis plot", labels = temp)
+# Or, can draw the trace plot without drawing the individual values and evaluate the generating values (useful for interpreting the importance of priors).  Here, I'm just inputing a value as an example 
+MCMCtrace(jm2, params = 'alpha\\[2\\]', ISB = FALSE, gvals = -1.0, ind=FALSE, pdf=FALSE)
 
-ex2 <- MCMCchains(jm2, params = 'alpha', excl = 'alpha\\[1\\]', mcmc.list = TRUE, ISB = FALSE)
-ex2 <- MCMCchains(jm2, params = c('alpha\\[2\\]','alpha\\[3\\]','alpha\\[4\\]'), mcmc.list = TRUE, ISB = FALSE)
-MCMCplot(ex2)
-ex2 <- MCMCchains(jm2, params = 'beta\\[1\\]', mcmc.list = TRUE, ISB = FALSE)
+# Can use the summary command to extract values from the output
+MCMCsummary(jm2,
+            params = 'PROBS',
+            Rhat = TRUE, 
+            n.eff = TRUE)
 
+# Or add additional terms to the summary
+Post.Summary <- MCMCsummary(jm2, 
+            params = 'PROBS',
+            Rhat = TRUE,
+            n.eff = TRUE,
+            func = function(x) median(x),
+            func_name = 'Median')
 
-ex2 <- MCMCchains(jm2, params = 'PROBS\\[1,1\\]', mcmc.list = TRUE, ISB = FALSE)
-MCMCplot(jm2, params = c('alpha\\[2\\]', 'alpha\\[4\\]', 'alpha\\[3\\]'), ISB=FALSE, main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1)
+# Export file
+write.csv(Post.Summary, "jm2_Output_Summary.csv")
 
+# If want to extract the posterior chains from the MCMC output, use MCMCchains
+ex2 <- MCMCchains(jm2, params = 'PROBS\\[1,1\\]',
+                  mcmc.list = TRUE,
+                  ISB = FALSE) #(ISB = Ignore Square Brackets)
 
+# Plot the caterpillar plots from the MCMC output
 MCMCplot(jm2, params = 'PROBS')
-MCMCsummary(ex2)
 
-par(mfrow=c(2,3))
-
+# Set all the Labels
 main.label <- c("Head-Up", "Head-Down", "Laying", "Head-Shake", "Locomotion", "Scratch")
 
-Post.Summary <- MCMCsummary(jm2, params = 'PROBS', Rhat = TRUE, n.eff = TRUE, func = function(x) median(x), func_name = 'median')
-# Head-Up
-MCMCplot(jm2, params = c('PROBS\\[1,1\\]', 'PROBS\\[2,1\\]', 'PROBS\\[3,1\\]'), ref = Post.Summary[1,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[1],col='blue',
+# To plot all the parameters, while cleaning up the plot a bit
+png('All_variables.png')
+par(mfrow=c(2,3))
+
+MCMCplot(jm2, params = c('PROBS\\[1,1\\]', 'PROBS\\[2,1\\]', 'PROBS\\[3,1\\]'), ref = Post.Summary[1,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[1],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability")
 MCMCplot(jm2, params = c('PROBS\\[1,2\\]', 'PROBS\\[2,2\\]', 'PROBS\\[3,2\\]'), ref = Post.Summary[4,8], ref_ovl = TRUE, ISB=FALSE, 
          main=main.label[2],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
-MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = TRUE, ISB=FALSE, 
-         main=main.label[3],
+MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[3],col='blue',
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
 
-MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = TRUE, ISB=FALSE, 
-         main=main.label[4],
+MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[4],col='blue',
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability")
 MCMCplot(jm2, params = c('PROBS\\[1,5\\]', 'PROBS\\[2,5\\]', 'PROBS\\[3,5\\]'), ref = Post.Summary[13,8], ref_ovl = TRUE, ISB=FALSE, 
          main=main.label[5],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
-MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = TRUE, ISB=FALSE, 
-         main=main.label[6],
+MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[6],col='blue',
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
+dev.off()
 
+# And to only show the graphs where a change occurred
+#png('PROBS_variables.png')
+outfile = 'PROBS_variables.png'
+#dev.new(width=5, height=1)
+#par(mfrow=c(1,3))
 
+png(file = outfile,width=1000, height=300)
+layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=c(1,1))
+#par(mar=c(5.1,4.1,4.1,5.1))
 
-
-
-
-
-par(mfrow=c(1,2))
-
-
-
-
-# Setup variables to plot and plotting window
-val.xlab <- colnames(y)
-
-# Look at the trace plots for all the posterior distributions for the behaviors
-par(mfrow=c(3,2))
-
-# Plot the control probabilities for each behavior to investigate proper exploration of the parameter space
-val.2.plot <- 22:28
-#plot.seq <- seq(1,25,3)
-#plot.seq.Trmt1 <- seq(2,26,3)
-#plot.seq.Trmt2 <- seq(3,27,3)
-
-for (i in 2:length(val.xlab)){
-  # Plot histogram, eliminating burn-in
-  #print(i)
-  hist(df1[,val.2.plot[i]], freq=FALSE, breaks=100, xlim=c(min(df1[,val.2.plot[i]]),max(df1[,val.2.plot[i]])), main= paste0("Posterior Distribution of ",val.xlab[i]), xlab=val.xlab[i])
-  # Overlay posterior distribution
-  lines(density(df1[,val.2.plot[i]],adjust=3),col="black",lwd=2)
-  lines(density(df2[,val.2.plot[i]],adjust=3),col="red",lwd=2)
-  lines(density(df3[,val.2.plot[i]],adjust=3),col="blue",lwd=2)
-  
-  # Plot trace plot
-  plot(df1[,val.2.plot[i]],xlab="Iteration Number",ylab=paste0("Value of "," ",val.xlab[i]),type="l", main="Trace Plot")
-  lines(df2[,val.2.plot[i]],col="red")
-  lines(df3[,val.2.plot[i]],col="blue")
-  abline(a=mean(df1[,val.2.plot[i]]),b=0,col="green")
-}
-
-# Summarize the activity probabilities....am just using chain 1 here (df1)
-# plot.seq... are indexes to calculate the probability summaries for each of the treatment groups, including the control.
-# The summed probabilities should all sum to 1 across each activity.  This was the whole reason for going to moving to a multinomial regression
-coefs.bhv <- apply(df1[,val.2.plot],2,mean)
-quant.bhv <- apply(df1[,val.2.plot],2,quantile)
-
-# Probability of control activities
-(control.probs <- exp(coefs.bhv)/sum(exp(coefs.bhv)))
-sum(control.probs)
-# Which should be the same as
-control.seq <- seq(1,19,3)
-(coefs.bhv.test <- apply(df1[,control.seq],2,mean))
-
-# Now do the same for Trmt 1
-#seq.val1 <- seq(11,35,3)
-plot.seq.Trmt1 <- seq(30,49,3)
-coefs.time2 <- apply(df1[,22:28],2,mean) + apply(df1[,plot.seq.Trmt1],2,mean)
-(per2.probs <- exp(coefs.time2)/sum(exp(coefs.time2)))
-
-# Which should be the same as
-control.seq1 <- seq(2,20,3)
-(coefs.bhv.test <- apply(df1[,control.seq1],2,mean))
-
-#seq.val2 <- seq(12,36,3)
-plot.seq.Trmt2 <- seq(31,49,3)
-coefs.time3 <- apply(df1[,22:28],2,mean) + apply(df1[,plot.seq.Trmt2],2,mean)
-(per3.probs <- exp(coefs.time3)/sum(exp(coefs.time3)))
-
-# Which should be the same as
-control.seq <- seq(3,21,3)
-(coefs.bhv.test <- apply(df1[,control.seq],2,mean))
-
-# Look at the probabilities for each time period
-colnames(y)
-control.probs
-per2.probs
-per3.probs
-
-# Probabilities should add up to 1
-sum(control.probs)
-sum(per2.probs)
-sum(per3.probs)
-
-# ***********************************************************************
-# ***********************************************************************
-
-# Separate out the probabilities
-# From this, could graph the probability of doing each activity or across each treatment.
-df.prob <- df1[,1:21]
-
-# Separate the alpha and beta coefficients, to compare the effects
-df.test <- df1[,-1:-21]
-testing1 <- df.test[,7] + df.test[,26]
-testing2 <- df.test[,27]
-testing3 <- df.test[,28]
-
-test <- cbind(testing2,testing3)
-
-test <- as.matrix(test)
-
-library(MCMCvis)
-
-par(mfrow=c(1,1))
-MCMCplot(test, labels=c("Treatment1","Treatment2"),xlim=c(-5,5))
-
-# Loop through all the behaviors, creating a graph for each
-Trt1 <- seq(9,28,3)
-Trt2 <- seq(10,28,3)
-val.xlab
-
-par(mfrow=c(1,2))
-
-# Extract the values to plot
-testing2 <- df.test[,Trt1]
-testing3 <- df.test[,Trt2]
-
-# Convert to a matrix
-testing2 <- as.matrix(testing2)
-testing3 <- as.matrix(testing3)
-
-# Plot the results
-MCMCplot(testing2, labels=val.xlab[1:7],xlim=c(-5,5),main="Cntl v Trmt 1", med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
-MCMCplot(testing3, labels = val.xlab[1:7], xlim=c(-5,5),main="Cntl v Trmt 2",med_sz=0, thin_sz = 1, thick_sz = 3, ax_sz=1, x_axis_text_sz=1, x_tick_text_sz=1, main_text_sz=1)
-
-
-
-
-# To graph the differences, need to append to a dataframe
-test <- exp(df.test[,1])/sum(exp(df.test[,1:9]))
-test <- df.test[,1] - df.test[,12]
+MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[3],col='blue',
+         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,labels_sz = 1.5,
+         labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability",
+         mar = c(5.1, 5.1, 4.1, 2.1))
+MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[4],col='blue',
+         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,
+         labels=NULL, xlab="Probability",
+         mar = c(5.1, 6.1, 4.1, 2.1))
+MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = FALSE, ISB=FALSE, 
+         main=main.label[6],col='blue',
+         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,
+         labels=NULL, xlab="Probability")
+dev.off()
 
 # ***********************************************************************
 # ***********************************************************************
