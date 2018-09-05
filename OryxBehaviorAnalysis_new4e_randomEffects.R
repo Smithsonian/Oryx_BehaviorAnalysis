@@ -29,7 +29,6 @@ bdata <- read.csv("Behavior.Nov3.csv")
 
 # Let's combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
 # Let's try to combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
-
 bdata$pro.HU <- bdata$pro.SHU + bdata$pro.FHU
 bdata$pro.HD <- bdata$pro.SHD + bdata$pro.FHD
 
@@ -107,26 +106,16 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 # Set AdjObTime as a factor 
 # Summarize Standing Head up (SHU)
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
-boxplot(pro.HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
+boxplot(HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
 # This does not account for repeated measures. 
 
-# Variables pro.walk and pro.oov both have NAs.  
-# Remove or the variable cannon be included in analysis.
-bdata$RSums <- rowSums(bdata[18:24], na.rm=TRUE)
-
 summary(bdata$RSums)
-# Some of the rows are < 1.  Set columns to 0.
-bdata$pro.oov[is.na(bdata$pro.oov)] <- 0
-summary(bdata)
 
 # ***********************************************************************
 # ***********************************************************************
-
-# Load library
-library(jagsUI)
 
 # Set-up burn-in/iterations for JAGS
-n.iter=100000 # Number of iterations
+n.iter=500000 # Number of iterations
 n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
 #n.adapt=1000 # adaptation iterations
 
@@ -146,19 +135,6 @@ data.list <- vector("list")
 #SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
 
 y <- cbind(bdata$HU,bdata$HD,bdata$LAY,bdata$HDSK,bdata$LOCO,bdata$SCRATCH) 
-
-HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
-HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
-LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
-HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
-#WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
-LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
-#FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
-#FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
-SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
-#SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
-
-y <- cbind(HU,HD,LAY,HDSK,LOCO,SCRATCH) 
 class(y)
 
 # Create matrix for inverse Wishart prior on individual random effects
@@ -230,8 +206,6 @@ upper_tri <- get_upper_tri(rho)
 upper_tri
 
 # Melt the correlation matrix
-library(reshape2)
-
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 names(melted_cormat) <- c("Behavior1", "Behavior2", "value")
 
@@ -265,6 +239,7 @@ ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
                                    size = 12, hjust = 1))+
   coord_fixed()
+
 # Print the heatmap
 print(ggheatmap)
 
@@ -280,7 +255,6 @@ ggheatmap +
     axis.ticks = element_blank(),
     legend.justification = c(1, 0),
     legend.position = c(0.4, 0.7),
-    legend.position = c(0.5, 0.8),
     legend.direction = "horizontal")+
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
@@ -326,6 +300,8 @@ Post.Summary <- MCMCsummary(jm2,
             n.eff = TRUE,
             func = function(x) median(x),
             func_name = 'Median')
+
+Post.Summary
 
 # Export file
 write.csv(Post.Summary, "jm2_Output_Summary.csv")
@@ -373,8 +349,7 @@ MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), 
 dev.off()
 
 # And to only show the graphs where a change occurred
-outfile = 'PROBS_variables.png'
-png(file = outfile,width=1000, height=300)
+png(file = 'PROBS_variables.png',width=1000, height=300)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=c(1,1))
 
 MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = FALSE, ISB=FALSE, 
