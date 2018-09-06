@@ -301,11 +301,54 @@ Post.Summary <- MCMCsummary(jm2,
             func = function(x) median(x),
             func_name = 'Median')
 
+# Including the highest posterior density intervals
+Post.Summary <- MCMCsummary(jm2, 
+                            params = 'PROBS',
+                            Rhat = TRUE,
+                            n.eff = TRUE,
+                            func = function(x) c(median(x), hdi(x,credMass = 0.95)),
+                            func_name = c('median','hdi_low','hdi_high'))
+
+# View
 Post.Summary
 
 # Export file
 write.csv(Post.Summary, "jm2_Output_Summary.csv")
 
+# Other ways to summarize variables
+#apply(jm2$sims.list$PROBS,c(2,3),function(x){hdi(x,credMass = 0.95)})[1,,]
+#apply(jm2$sims.list$PROBS,c(2,3),function(x){hdi(x,credMass = 0.95)})[2,,]
+
+# Or use the MCMCpstr command
+MCMCpstr(jm2,
+         params = 'PROBS',
+         func = median)
+
+# Or
+MCMCpstr(jm2,
+         params = 'PROBS',
+         func = function(x) hdi(x, credMass = 0.95))
+
+# Can also investigate which of the distributions is larger than the other by referencing the simslist
+# Probability that behavior 'x' increased from period 1 to period 2
+
+# If want to view the differences between the distributions, could summarize using a histogram
+hist(jm2$sims.list$PROBS[,3,2]-jm2$sims.list$PROBS[,3,1], main = "Distribution Differences", xlab="Difference")
+
+# But, might also want the probabilities
+# Here, figure out which meet the criteria and summarize over the total length
+# Summarize Head-shaking
+# What's the probability that Period 2 is greater than period 1.  Answer is 0.99 Probability
+length(which(jm2$sims.list$PROBS[,2,4]>jm2$sims.list$PROBS[,1,4]))/length(jm2$sims.list$PROBS[,1,4])
+# What about Period 3.  Never
+length(which(jm2$sims.list$PROBS[,3,4]<jm2$sims.list$PROBS[,1,4]))/length(jm2$sims.list$PROBS[,1,4])
+# Smaller.  Almost always (0.9999)
+
+# I don't understand this part....function to summarize all
+apply(jm2$sims.list$PROBS[,c(1,2),],3,function(x) length(which((x[,2]-x[,1])>0))/75000)
+
+# *************************************
+# *************************************
 # If want to extract the posterior chains from the MCMC output, use MCMCchains
 ex2 <- MCMCchains(jm2, params = 'PROBS\\[1,1\\]',
                   mcmc.list = TRUE,
@@ -329,21 +372,21 @@ MCMCplot(jm2, params = c('PROBS\\[1,2\\]', 'PROBS\\[2,2\\]', 'PROBS\\[3,2\\]'), 
          main=main.label[2],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
-MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[3],col='blue',
+MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[3],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
 
-MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[4],col='blue',
+MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[4],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability")
 MCMCplot(jm2, params = c('PROBS\\[1,5\\]', 'PROBS\\[2,5\\]', 'PROBS\\[3,5\\]'), ref = Post.Summary[13,8], ref_ovl = TRUE, ISB=FALSE, 
          main=main.label[5],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
-MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[6],col='blue',
+MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[6],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
 dev.off()
@@ -352,19 +395,23 @@ dev.off()
 png(file = 'PROBS_variables.png',width=1000, height=300)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=c(1,1))
 
-MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[3],col='blue',
-         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,labels_sz = 1.5,
+MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], 
+         ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[3],
+         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,tick_text_sz = 1.5, 
+         labels_sz = 2,
          labels=c('Pre-Trmt','Trmt','Post-Trmt'), xlab="Probability",
-         mar = c(5.1, 5.1, 4.1, 2.1))
-MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[4],col='blue',
-         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,
+         mar = c(5.1, 6.1, 4.1, 2.1))
+MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], 
+         ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[4],
+         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,tick_text_sz = 1.5, 
          labels=NULL, xlab="Probability",
          mar = c(5.1, 6.1, 4.1, 2.1))
-MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], ref_ovl = FALSE, ISB=FALSE, 
-         main=main.label[6],col='blue',
-         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,
+MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), ref = Post.Summary[16,8], 
+         ref_ovl = TRUE, ISB=FALSE, 
+         main=main.label[6],
+         med_sz=1.5, thin_sz = 1, thick_sz = 3, ax_sz=2, main_text_sz=2,axis_text_sz=1.5,tick_text_sz = 1.5, 
          labels=NULL, xlab="Probability")
 dev.off()
 
