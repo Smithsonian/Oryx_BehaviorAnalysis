@@ -11,7 +11,7 @@ model{
     beta[1, j] <- 0   # beta[1,] are fixed to zero because there is no period-adjustment needed for period 1 since it is the reference
   }
   
-  for (i in 2:3) {    # loop over time periods 2 and 3 (post-collaring)
+  for (i in 2:3) {    # loop over time periods 2 (treatment) and 3 (post-treatment)
     beta[i, 1] <- 0   # as for period 1, we have to fix the relative prob. of the reference outcome (HU) to zero on the log scale
     for (j in 2:n.outcomes){   # loop over response outcomes
       beta[i, j] ~ dnorm(0, 0.001)  # assign diffuse priors to change (periods 1-2 and periods 1-3) in rel. probs. of outcomes
