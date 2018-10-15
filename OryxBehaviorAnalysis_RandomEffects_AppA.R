@@ -2,14 +2,13 @@
 #*********************************************************************************************************
 
 # Project: SHO Stress and Behavior Analysis
-# Date: 10 November 2016
-# Author: Stephanie Cunningham, Jared Stabach, Grant Connette
+# Date: 11 October 2018
+# Author: Jared Stabach, Grant Connette, and Stephanie Cunningham
 # Description: Summarize/investigate behavioral changes in Scimitar-horned oryx fit with GPS collars
 #               Fit data in a Bayesian framework to estimate the probability of each behavioral activity
 #               Data fit based on a multinomial likelihood
-#               How does each behavior change across the time periods?  Using each animal as a control.
+#               How does each behavior change across the time periods?  Using each animal as their own control.
 #               Expectation is that adverse behaviors, such as head-shaking, should increase during the period animals are collared and then return to normal.
-# New comment
 
 #*********************************************************************************************************
 #*********************************************************************************************************
@@ -25,64 +24,6 @@ library(jagsUI)
 library(MCMCvis)
 
 # Read in file
-bdata <- read.csv("Behavior.Nov3.csv")
-
-# Let's combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
-# Let's try to combine the proportions for HU (SHU + FHU: Standing/Feeding Head-Up) and HD (SHD + FHD: Standing/Feeding Head-Down).
-bdata$pro.HU <- bdata$pro.SHU + bdata$pro.FHU
-bdata$pro.HD <- bdata$pro.SHD + bdata$pro.FHD
-
-bdata$pro.walk[is.na(bdata$pro.walk)] <- 0
-bdata$pro.Loco <- bdata$pro.walk + bdata$pro.social
-
-# Delete and reorganize
-bdata <- bdata[,-c(16,17,20,21,22,24)]
-# Reorganize
-bdata <- bdata[,c(1:15,22:24,16:21)]
-
-# Fix the data/time fields
-bdata$TimeStart <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeStart), format="%m/%d/%Y %H:%M"))
-bdata$TimeEnd <- as.POSIXct(strptime(paste0(bdata$Date," ",bdata$TimeEnd), format="%m/%d/%Y %H:%M"))
-
-# Re-order dataframe so all the behavior data is at the end
-#bdata <- bdata[,c(1:15,26:27,16:25)]
-bdata <- bdata[,c(1:15,23:24,16:22)]
-
-# Remove any rows where variables of interest (columns 18:24) have NAs
-# These are all the oov (Out of View) records, so doesn't really matter, since not included in analysis.
-# Set to Zero
-bdata[18:24][is.na(bdata[18:24])] <- 0
-
-bdata$RSums <- rowSums(bdata[18:24])
-summary(bdata$RSums)
-
-# Reformat data and bind together
-bdata$HU <- as.integer(bdata$ModTotObs*bdata$pro.HU)
-bdata$HD <- as.integer(bdata$ModTotObs*bdata$pro.HD)
-bdata$LAY <- as.integer(bdata$ModTotObs*bdata$pro.lay)
-bdata$HDSK <- as.integer(bdata$ModTotObs*bdata$pro.headshake)
-#WALK <- as.integer(bdata$ModTotObs*bdata$pro.walk)
-bdata$LOCO <- as.integer(bdata$ModTotObs*bdata$pro.Loco)
-#FHU <- as.integer(bdata$ModTotObs*bdata$pro.FHU)
-#FHD <- as.integer(bdata$ModTotObs*bdata$pro.FHD)
-bdata$SCRATCH <- as.integer(bdata$ModTotObs*bdata$pro.scratch)
-bdata$OOV <- as.integer(bdata$ModTotObs*bdata$pro.oov)
-#SOCIAL <- as.integer(bdata$ModTotObs*bdata$pro.social)
-
-# Re-Order
-bdata <- bdata[,c(1:17,26:32,25)]
-
-# ************************************
-# ************************************
-
-# Write to a new file.  This will be the file that is shared
-write.csv(bdata, file = "bdata.csv")
-
-# ***********************************************************************
-# ***********************************************************************
-
-# Read in file
-# Some of the factors (Feeding Head-Up + Standing Head-Up have already been collapsed (Head-Up))
 bdata <- read.csv("bdata.csv", header=T, sep=",", row.names=1)
 
 # View data
@@ -102,22 +43,12 @@ bdata <- bdata[which(bdata$Treatment != "control"),]
 # Set AdjObTime as a factor 
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 
-# Look at data quickly
-# Set AdjObTime as a factor 
-# Summarize Standing Head up (SHU)
-bdata$AdjObTime <- as.factor(bdata$AdjObTime)
-boxplot(HU~AdjObTime,data=bdata,boxwex=0.5,frame = FALSE,col=c("gray100","gray80","gray20"),main="Standing Head Up", xlab="Treatment Group", ylab="Percent of Activity") 
-# This does not account for repeated measures. 
-
-summary(bdata$RSums)
-
 # ***********************************************************************
 # ***********************************************************************
 
 # Set-up burn-in/iterations for JAGS
 n.iter=500000 # Number of iterations
 n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
-#n.adapt=1000 # adaptation iterations
 
 # Set up blank list
 data.list <- vector("list")
@@ -162,9 +93,14 @@ jm2
 
 # *********************************
 # *********************************
-# Look at the variance/covariance matrix
+# Create the variance/covariance matrix (Fig. 3)
+# *********************************
+# *********************************
+
+# Raw image
 image(jm2$mean$sigma)
 
+# Format to make it look nice
 rho <- matrix(NA,6,6)
 for (i in 1:6){
   for (j in 1:6){
@@ -173,7 +109,7 @@ for (i in 1:6){
   }
 }
 
-# Specify column names
+# Specify column names (i.e., behaviors)
 rownames(rho) <- colnames(rho) <- c("HU","HD","LAY","HDSK","LOCO","SCRATCH")
 
 # Get lower triangle of the correlation matrix
@@ -215,20 +151,6 @@ upper_tri <- get_upper_tri(rho)
 # Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
-# Create a ggheatmap
-ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal()+ # minimal theme
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1))+
-  coord_fixed()
-
-# Print the heatmap
-print(ggheatmap)
-
 # Print Again with values and a few items cleaned up
 ggheatmap + 
   geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
@@ -261,27 +183,9 @@ library(HDInterval)
 jm2$mean
 
 # Look at trace and density plots to assess model convergence
-# Here, individual (ind) has been turned on to TRUE to draw each line
 MCMCtrace(jm2, params = 'PROBS', ind=TRUE, pdf=FALSE)
 
-# Or, can draw the trace plot without drawing the individual values and evaluate the generating values (useful for interpreting the importance of priors).  Here, I'm just inputing a value as an example 
-MCMCtrace(jm2, params = 'alpha\\[2\\]', ISB = FALSE, gvals = -1.0, ind=FALSE, pdf=FALSE)
-
-# Use the summary command to extract values from the output
-MCMCsummary(jm2,
-            params = 'PROBS',
-            Rhat = TRUE, 
-            n.eff = TRUE)
-
-# Or add additional terms to the summary
-Post.Summary <- MCMCsummary(jm2, 
-            params = 'PROBS',
-            Rhat = TRUE,
-            n.eff = TRUE,
-            func = function(x) median(x),
-            func_name = 'Median')
-
-# Including the highest posterior density intervals
+# Summarize values from the output, include median and highest posterior density intervals
 Post.Summary <- MCMCsummary(jm2, 
                             params = 'PROBS',
                             Rhat = TRUE,
@@ -295,24 +199,9 @@ Post.Summary
 # Export file
 write.csv(Post.Summary, "jm2_Output_Summary.csv")
 
-# Or use the MCMCpstr command
-MCMCpstr(jm2,
-         params = 'PROBS',
-         func = median)
-
-# Or
-MCMCpstr(jm2,
-         params = 'PROBS',
-         func = function(x) hdi(x, credMass = 0.95))
-
-# Can also investigate which of the distributions is larger than the other by referencing the simslist
-# Probability that behavior 'x' increased from period 1 to period 2
-
-# If want to view the differences between the distributions, could summarize using a histogram
+# View the differences between the distributions
 hist(jm2$sims.list$PROBS[,3,2]-jm2$sims.list$PROBS[,3,1], main = "Distribution Differences", xlab="Difference")
 
-# But, might also want the probabilities
-# Here, figure out which meet the criteria and summarize over the total length
 # Summarize Head-shaking
 # What's the probability that Period 2 is greater than period 1.  Answer is 0.99 Probability
 length(which(jm2$sims.list$PROBS[,2,4]>jm2$sims.list$PROBS[,1,4]))/length(jm2$sims.list$PROBS[,1,4])
@@ -320,16 +209,11 @@ length(which(jm2$sims.list$PROBS[,2,4]>jm2$sims.list$PROBS[,1,4]))/length(jm2$si
 length(which(jm2$sims.list$PROBS[,3,4]<jm2$sims.list$PROBS[,1,4]))/length(jm2$sims.list$PROBS[,1,4])
 # Smaller.  Almost always (0.9999)
 
-# I don't understand this part....function to summarize all
+# Summarizes all, compares period 2 with period 1
 apply(jm2$sims.list$PROBS[,c(1,2),],3,function(x) length(which((x[,2]-x[,1])>0))/75000)
 
 # *************************************
 # *************************************
-# If want to extract the posterior chains from the MCMC output, use MCMCchains
-ex2 <- MCMCchains(jm2, params = 'PROBS\\[1,1\\]',
-                  mcmc.list = TRUE,
-                  ISB = FALSE) #(ISB = Ignore Square Brackets)
-
 # Plot the caterpillar plots from the MCMC output
 MCMCplot(jm2, params = 'PROBS')
 
