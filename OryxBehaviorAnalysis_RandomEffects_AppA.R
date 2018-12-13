@@ -4,9 +4,8 @@
 # Project: Scimitar-horned oryx Behavior Analysis
 # Date: 12 December 2018
 # Author: Grant Connette, Jared Stabach, and Stephanie Cunningham
-# Contact: grmcco@gmail.com
-# Description: Investigate behavioral changes in Scimitar-horned oryx fit with GPS collars. Data fit in a Bayesian framework to estimate the probability of each behavioral activity, based on a multinomial ilkelihood.
-# Each animal used as their own control to assess how each behavior changed across time periods. Expectation is that adverse behaviors, such as headshaking, should increase during the period animals are collared (treatment) and then return to normal (post-treatment).
+# Contact grmcco@gmail.com for additional details
+# Description: Investigate behavioral changes in Scimitar-horned oryx fit with GPS collars. Data fit in a Bayesian framework to estimate the probability of each behavioral activity, based on a multinomial likelihood. Each animal was used as their own control to assess how each behavior changed across time periods. Expectation was that adverse behaviors, such as headshaking, should increase during the period animals are collared (treatment) and then return to normal (post-treatment).
 
 #*********************************************************************************************************
 #*********************************************************************************************************
@@ -22,7 +21,7 @@ library(jagsUI)
 library(MCMCvis)
 
 # Read in file
-bdata <- read.csv("bdata.csv", header=T, sep=",", row.names=1)
+bdata <- read.csv(paste0(getwd(),"/Data/bdata.csv"), header=T, sep=",", row.names=1)
 
 # View data
 head(bdata)
@@ -32,7 +31,7 @@ bdata$TimeStart <- as.POSIXct(bdata$TimeStart, format="%Y-%m-%d %H:%M")
 bdata$TimeEnd <- as.POSIXct(bdata$TimeEnd, format="%Y-%m-%d %H:%M")
 
 # Code the Control and Treatment records
-# Remove the Control, too few to be useful
+# Remove the Controls, too few animals to be useful
 # Code the Control and Treatment records.
 bdata$Control <- ifelse(bdata$Treatment == "control",1,2) 
 bdata.control <- bdata[which(bdata$Treatment == "control"),]
@@ -73,7 +72,7 @@ data.list=list(
 )
 
 # Fit model
-jm2=jags(model.file = "Multinomial_withREs.R",
+jm2=jags(model.file = "Model_Multinomial_withREs.R",
          data=data.list,
          n.chains=3,n.iter=n.iter,n.thin=20,parallel = F,
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
@@ -82,8 +81,8 @@ jm2=jags(model.file = "Multinomial_withREs.R",
 # *********************************
 # *********************************
 
-#save(jm2, file = "Behavior_Models.Rda")
-load("Behavior_Models.Rda")
+#save(jm2, file = paste0(getwd(),/Output/"Behavior_Models.Rda"))
+load(paste0(getwd(),"/Output/Behavior_Models.Rda"))
 
 # Summarize object
 print("*********************************************************************")
