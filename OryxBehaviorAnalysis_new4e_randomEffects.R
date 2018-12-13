@@ -115,8 +115,8 @@ summary(bdata$RSums)
 # ***********************************************************************
 
 # Set-up burn-in/iterations for JAGS
-n.iter=500000 # Number of iterations
-n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
+n.iter=2000000 # Number of iterations
+n.burnin=n.iter*0.50 # burn-in iterations (0.20 percent)
 #n.adapt=1000 # adaptation iterations
 
 # Set up blank list
@@ -140,7 +140,7 @@ class(y)
 # Create matrix for inverse Wishart prior on individual random effects
 R <- matrix(0,nrow=6,ncol=6)
 for (i in 1:6){
-  R[i,i] <- 0.1
+  R[i,i] <- 1
 }
 
 # Setup the data list
@@ -158,10 +158,10 @@ data.list=list(
 )
 
 # Fit model
-jm2=jags(model.file = "Multinomial_withREs.R",
+system.time(jm2<-jags(model.file = "Multinomial_withREs.R",
          data=data.list,
-         n.chains=3,n.iter=n.iter,n.thin=20,parallel = F,
-         parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
+         n.chains=3,n.iter=n.iter,n.burnin = n.burnin, n.thin=100, parallel = T,
+         parameters.to.save = c("alpha","beta","sigma","PROBS","eps")))
 
 # Save the jags model
 # *********************************

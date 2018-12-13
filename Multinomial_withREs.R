@@ -24,7 +24,7 @@ model{
   }
   
   ## priors for elements of precision matrix
-  prec[1:6,1:6] ~ dwish(R[,],6)
+  prec[1:6,1:6] ~ dwish(R[,],7)  # df set to j+1
   sigma[1:6,1:6] <- inverse(prec[,])    # convert precision to covariance matrix
   #  rho <- sigma[1,2]/sqrt(sigma[1,1]*sigma[2,2])  # correlation between outcome 1 and 2
   
