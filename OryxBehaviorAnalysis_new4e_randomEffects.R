@@ -1,7 +1,7 @@
 #*********************************************************************************************************
 #*********************************************************************************************************
 
-# Project: SHO Stress and Behavior Analysis 
+# Project: SHO Stress and Behavior Analysis
 # Date: 10 November 2016
 # Author: Stephanie Cunningham, Jared Stabach, Grant Connette
 # Description: Summarize/investigate behavioral changes in Scimitar-horned oryx fit with GPS collars
