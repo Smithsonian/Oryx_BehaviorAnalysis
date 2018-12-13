@@ -1,14 +1,12 @@
 #*********************************************************************************************************
 #*********************************************************************************************************
 
-# Project: SHO Stress and Behavior Analysis
-# Date: 11 October 2018
-# Author: Jared Stabach, Grant Connette, and Stephanie Cunningham
-# Description: Summarize/investigate behavioral changes in Scimitar-horned oryx fit with GPS collars
-#               Fit data in a Bayesian framework to estimate the probability of each behavioral activity
-#               Data fit based on a multinomial likelihood
-#               How does each behavior change across the time periods?  Using each animal as their own control.
-#               Expectation is that adverse behaviors, such as head-shaking, should increase during the period animals are collared and then return to normal.
+# Project: Scimitar-horned oryx Behavior Analysis
+# Date: 12 December 2018
+# Author: Grant Connette, Jared Stabach, and Stephanie Cunningham
+# Contact: grmcco@gmail.com
+# Description: Investigate behavioral changes in Scimitar-horned oryx fit with GPS collars. Data fit in a Bayesian framework to estimate the probability of each behavioral activity, based on a multinomial ilkelihood.
+# Each animal used as their own control to assess how each behavior changed across time periods. Expectation is that adverse behaviors, such as headshaking, should increase during the period animals are collared (treatment) and then return to normal (post-treatment).
 
 #*********************************************************************************************************
 #*********************************************************************************************************
