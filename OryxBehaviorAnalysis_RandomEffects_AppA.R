@@ -19,6 +19,7 @@ library(reshape2)
 library(ggplot2)
 library(jagsUI)
 library(MCMCvis)
+library(HDInterval)
 
 # Read in file
 bdata <- read.csv(paste0(getwd(),"/Data/bdata.csv"), header=T, sep=",", row.names=1)
@@ -81,18 +82,18 @@ jm2=jags(model.file = "Model_Multinomial_withREs.R",
 # *********************************
 # *********************************
 
-#save(jm2, file = paste0(getwd(),/Output/"Behavior_Models.Rda"))
-load(paste0(getwd(),"/Output/Behavior_Models.Rda"))
+#save(jm2, file = "Behavior_Models.Rda")
+load("Behavior_Models.Rda")
 
 # Summarize object
 print("*********************************************************************")
 jm2
 
-# *********************************
-# *********************************
-# Create the variance/covariance matrix (Fig. 3)
-# *********************************
-# *********************************
+# ***********************************************************************
+# ***********************************************************************
+
+# Create the variance/covariance matrix
+# Code manipulates the variance/covariance matrix to make it pretty for publication
 
 # Raw image
 image(jm2$mean$sigma)
@@ -145,10 +146,26 @@ melted_cormat <- melt(upper_tri, na.rm = TRUE)
 # Reorder the correlation matrix
 rho <- reorder_cormat(rho)
 upper_tri <- get_upper_tri(rho)
+
 # Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 12, hjust = 1))+
+  coord_fixed()
+
+# Plot
+ggheatmap
+
 # Print Again with values and a few items cleaned up
+png(filename=paste0(getwd(),"/Output/CovMatrix.png"))
 ggheatmap + 
   geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
   theme(
@@ -163,18 +180,14 @@ ggheatmap +
     legend.direction = "horizontal")+
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
+dev.off()
 
-# *********************************
-# *********************************
+# ***********************************************************************
+# ***********************************************************************
 
+# Graph the Probabilities and summarize results
 # eps are the individual random effects
 # tau.j's are the random effects for each behavior
-
-# Graph the Probabilities
-# *********************************
-# *********************************
-
-library(HDInterval)
 
 # Investigate values in output
 jm2$mean
@@ -194,9 +207,10 @@ Post.Summary <- MCMCsummary(jm2,
 Post.Summary
 
 # Export file
-write.csv(Post.Summary, "jm2_Output_Summary.csv")
+write.csv(Post.Summary, paste0(getwd(),"/Output/jm2_Output_Summary.csv"))
 
 # View the differences between the distributions
+par(mfrow=c(1,1))
 hist(jm2$sims.list$PROBS[,3,2]-jm2$sims.list$PROBS[,3,1], main = "Distribution Differences", xlab="Difference")
 
 # Summarize Head-shaking
@@ -206,7 +220,7 @@ length(which(jm2$sims.list$PROBS[,2,4]>jm2$sims.list$PROBS[,1,4]))/length(jm2$si
 length(which(jm2$sims.list$PROBS[,3,4]<jm2$sims.list$PROBS[,1,4]))/length(jm2$sims.list$PROBS[,1,4])
 # Smaller.  Almost always (0.9999)
 
-# Summarizes all, compares period 2 with period 1
+# Summarize all behaviors, compares period 2 with period 1
 apply(jm2$sims.list$PROBS[,c(1,2),],3,function(x) length(which((x[,2]-x[,1])>0))/75000)
 
 # *************************************
@@ -217,10 +231,11 @@ MCMCplot(jm2, params = 'PROBS')
 # Set all the Labels
 main.label <- c("Head-Up", "Head-Down", "Laying", "Headshaking", "Locomotion", "Scratching")
 
-# To plot all the parameters, while cleaning up the plot a bit
-png('All_variables.png')
+# Plot all parameters
+png(paste0(getwd(),"/Output/All_variables.png"))
 par(mfrow=c(2,3))
 
+# Plotting each parameter individuals: pre-treatment, treatment, and post-treatment
 MCMCplot(jm2, params = c('PROBS\\[1,1\\]', 'PROBS\\[2,1\\]', 'PROBS\\[3,1\\]'), ref = Post.Summary[1,8], ref_ovl = TRUE, ISB=FALSE, 
          main=main.label[1],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
@@ -233,7 +248,6 @@ MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), 
          main=main.label[3],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
          labels=NULL, xlab="Probability")
-
 MCMCplot(jm2, params = c('PROBS\\[1,4\\]', 'PROBS\\[2,4\\]', 'PROBS\\[3,4\\]'), ref = Post.Summary[10,8], ref_ovl = TRUE, ISB=FALSE, 
          main=main.label[4],
          med_sz=1, thin_sz = 1, thick_sz = 3, ax_sz=1, main_text_sz=1,
@@ -248,8 +262,8 @@ MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), 
          labels=NULL, xlab="Probability")
 dev.off()
 
-# And to only show the graphs where a change occurred
-png(file = 'PROBS_variables.png',width=15, height=5, units = 'in', res=500)
+# Display only the graphs where a significant change occurred
+png(file = paste0(getwd(),"/Output/PROBS_variables.png"),width=15, height=5, units = 'in', res=500)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=1)
 
 MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], 
