@@ -152,14 +152,14 @@ upper_tri <- get_upper_tri(rho)
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 
 # Create a ggheatmap
-ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white")+
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value)) + 
+                      geom_tile(color = "white") +
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
                        midpoint = 0, limit = c(-1,1), space = "Lab", 
                        name="Pearson\nCorrelation") +
-  theme_minimal()+ # minimal theme
+  theme_minimal() + # minimal theme
   theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1))+
+                                   size = 12, hjust = 1)) +
   coord_fixed()
 
 # Plot
