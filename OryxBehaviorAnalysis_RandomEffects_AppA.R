@@ -46,7 +46,8 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 
 # Set-up burn-in/iterations for JAGS
 n.iter=500000 # Number of iterations
-n.update=n.iter*0.20 # burn-in iterations (0.20 percent)
+n.burnin=n.iter*0.20 # burn-in iterations (0.20 percent)
+n.thin = 100
 
 # Set up blank list
 data.list <- vector("list")
@@ -75,7 +76,7 @@ data.list=list(
 # Fit model
 jm2=jags(model.file = "Model_Multinomial_withREs.R",
          data=data.list,
-         n.chains=3,n.iter=n.iter,n.thin=20,parallel = F,
+         n.chains=3,n.iter=n.iter,n.burning = n.burnin,n.thin=n.thin,parallel = F,
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
 
 # Save the jags model
