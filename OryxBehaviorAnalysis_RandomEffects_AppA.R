@@ -76,7 +76,7 @@ data.list=list(
 # Fit model
 jm2=jags(model.file = "Model_Multinomial_withREs.R",
          data=data.list,
-         n.chains=3,n.iter=n.iter,n.burning = n.burnin,n.thin=n.thin,parallel = F,
+         n.chains=3,n.iter=n.iter,n.burnin = n.burnin,n.thin=n.thin,parallel = F,
          parameters.to.save = c("alpha","beta","sigma","PROBS","eps"))
 
 # Save the jags model
