@@ -28,7 +28,7 @@ The steps described here are aimed and recreating the figures and tables listed 
 
 Additional details in:
 
-Stabach, J.A., Cunningham, S.A., Connette, C., Mota, J.L., Reed, D., Byron, M., Songer, M., T. Wacher, Mertes, K., Brown, J.L., Comizzoli, P., Newby, J., S. Monfort, and P. Leimgruber. In Review. Short-term Effects of GPS Collars on Scimitar-horned Oryx. Journal of Wildilfe Mangaement.
+Stabach, J.A., Cunningham, S.A., Connette, C., Mota, J.L., Reed, D., Byron, M., Songer, M., T. Wacher, Mertes, K., Brown, J.L., Comizzoli, P., Newby, J., S. Monfort, and P. Leimgruber. In Review. Short-term Effects of GPS Collars on Scimitar-horned Oryx. Journal of Wildilfe Management.
 
 ### Load Libraries
 Load each library necessary to complete the analysis.
