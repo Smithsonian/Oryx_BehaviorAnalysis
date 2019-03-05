@@ -243,7 +243,7 @@ div.tocify {
 
 </div>
 <p>Additional details in:</p>
-<p>Stabach, J.A., Cunningham, S.A., Connette, C., Mota, J.L., Reed, D., Byron, M., Songer, M., T. Wacher, Mertes, K., Brown, J.L., Comizzoli, P., Newby, J., S. Monfort, and P. Leimgruber. In Review. Short-term Effects of GPS Collars on Scimitar-horned Oryx. Journal of Wildilfe Mangaement.</p>
+<p>Stabach, J.A., Cunningham, S.A., Connette, C., Mota, J.L., Reed, D., Byron, M., Songer, M., T. Wacher, Mertes, K., Brown, J.L., Comizzoli, P., Newby, J., S. Monfort, and P. Leimgruber. In Review. Short-term Effects of GPS Collars on Scimitar-horned Oryx. Journal of Wildilfe Management.</p>
 <div id="load-libraries" class="section level3">
 <h3>Load Libraries</h3>
 <p>Load each library necessary to complete the analysis.</p>
@@ -847,7 +847,7 @@ Post.Summary</code></pre>
 <h3>Export Summary</h3>
 <p>Output <code>Post.Summary</code> to re-create Appendix A.</p>
 <pre class="r"><code># Export file
-write.csv(Post.Summary, paste0(getwd(),&quot;/Output/jm2_Output_Summary.csv&quot;))</code></pre>
+write.csv(Post.Summary, &quot;./Output/jm2_Output_Summary.csv&quot;)</code></pre>
 </div>
 <div id="plot-results" class="section level3">
 <h3>Plot Results</h3>
@@ -859,7 +859,7 @@ write.csv(Post.Summary, paste0(getwd(),&quot;/Output/jm2_Output_Summary.csv&quot
 main.label &lt;- c(&quot;Head-Up&quot;, &quot;Head-Down&quot;, &quot;Laying&quot;, &quot;Headshaking&quot;, &quot;Locomotion&quot;, &quot;Scratching&quot;)
 
 # Display only the graphs where a significant change occurred
-#png(file = paste0(getwd(),&quot;/Output/PROBS_variables.png&quot;),width=15, height=5, units = 'in', res=500)
+#png(file = &quot;./Output/PROBS_variables.png&quot;,width=15, height=5, units = 'in', res=500)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=1)
 
 MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], 

@@ -1,3 +1,6 @@
+## ----setup, include=FALSE------------------------------------------------
+knitr::opts_chunk$set(echo = TRUE)
+
 ## ----Load, eval = T, message = F-----------------------------------------
 # Clear objects in memory
 rm(list=ls())
@@ -183,7 +186,7 @@ Post.Summary
 
 ## ----Export, eval=F------------------------------------------------------
 ## # Export file
-## write.csv(Post.Summary, paste0(getwd(),"/Output/jm2_Output_Summary.csv"))
+## write.csv(Post.Summary, "./Output/jm2_Output_Summary.csv")
 
 ## ----Plot, eval = T------------------------------------------------------
 # Plot the caterpillar plots from the MCMC output
@@ -193,7 +196,7 @@ Post.Summary
 main.label <- c("Head-Up", "Head-Down", "Laying", "Headshaking", "Locomotion", "Scratching")
 
 # Display only the graphs where a significant change occurred
-#png(file = paste0(getwd(),"/Output/PROBS_variables.png"),width=15, height=5, units = 'in', res=500)
+#png(file = "./Output/PROBS_variables.png",width=15, height=5, units = 'in', res=500)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=1)
 
 MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], 
