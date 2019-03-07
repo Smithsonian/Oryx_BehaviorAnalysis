@@ -1,18 +1,22 @@
 ---
 title: "Behavior Analysis"
-subtitle: "Stabach et al. 2019 - Effects of GPS Collars"
 author: "Jared Stabach, Smithsonian Conservation Biology Institute"
 date: "01 March 2019"
 output:
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
-    toc: true
+    number_sections: no
+    toc: yes
     toc_depth: 3
-    toc_float: 
-      collapsed: false
-      smooth_scroll: true
-    number_sections: false
-    #theme: united
-    #highlight: tango
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+subtitle: Stabach et al. 2019 - Effects of GPS Collars
 ---
 
 ```{r setup, include=FALSE}
