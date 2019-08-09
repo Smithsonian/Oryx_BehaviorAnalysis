@@ -1,3 +1,6 @@
+## ----setup, include=FALSE------------------------------------------------
+knitr::opts_chunk$set(echo = TRUE)
+
 ## ----Load, eval = T, message = F-----------------------------------------
 # Clear objects in memory
 rm(list=ls())
