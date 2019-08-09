@@ -114,14 +114,26 @@ data.list=list(
 ```
 
 ### Model Description
-Because multiple individuals were included in analyses, our model parametization includes random effects.  We assigned diffuse $Normal(\mu = 0, \sigma^2 = 10^3)$ priors for the Pre-treatment intercept terms, $\alpha_j$, and the regression coefficients corresponding to the Treatment and Post-treatment periods, $\beta_{1,j}$ and $\beta_{2,j}$.  We assigned a Wishart prior, parameterized by a scale matrix and a degrees of freedom parameter, to the inverse of the variance-covariance matrix, $\Sigma$.  We set the degrees of freedom equal to 7 ($df = j + 1$), the diagonal elements of the scale matrix equal to 1, and the off-diagonal elements equal to 0.  Finally, for parameter identifiability, the first behavioral response ($j = 1$; Standing head-Up) was selected as a reference category and the corresponding parameters $\alpha_1$, $\beta_{1,1}$, and $\beta_{2,1}$ were fixed to a value of 0.
+To assess differences in the frequencies of observed response behaviors between treatment periods, we fit a multinomial logistic regression model to the data, formulated in a Bayesian framework.  The behavioral observations for each 10-minute observation period were represented as a vector of counts, $C_{i.} = (C_{i1},\dots,C_{i6})$, summarizing the number of times each of the six response behaviors were observed during a given observation period, $i$.  Each vector of behavioral counts was treated as a multinomial response:
+
+$$ C_{i.}\sim Multinomial(p_{i.},N_i)$$
+
+where $p_{i.}=(p_{i1},\dots,p_{i6})$ represented the probability of each response behavior during observation period $i_.$ and $N_i$ was an integer value indicating the total number of behavioral observations during the observation period ($N_i$ = 10 minutes/period * 4 observations/minute = 40 observations/period). 
+
+We modeled response probabilities, $p_{ij}$, for a given observation period, $i$, as a function of both individual and treatment period, where the log odds of each possible response behavior, $j$, are modelled as a linear combination of predictor variables:
+
+$$p_{ij} = \frac{\varphi_{ij}}{\Sigma_j\varphi_{ij}} $$
+$$log(\varphi_{ij}) = \alpha_j + \beta_{1,j}Period1_i+\beta_{2,j}Period2_i+\gamma_{Ind(i)j} $$
+where $\alpha_j$ represented the baseline (Pre-treatment) regression intercept for response behavior $j$, $\beta_{1,j}$ represented the corresponding regression coefficient associated with the treatment period, and $\beta_{2,j}$ represented the regression coefficient associated with the post-treatment period.  The binary indicator variables, $Period1_i$  and $Period2_i$, designated whether or not each observation period, $i$, occurred during either the Treatment ($Period1$) or Post-treatment period ($Period2$).  An individual random error term, $\gamma_{Ind(i)j}$, was incorporated to control for the effects of repeated measurements of the same individuals and uneven numbers of observation periods for each individual among treatment periods.  Individual errors, $\gamma_{Ind(i).}$, were assumed to be realizations of a multivariate normal distribution with an all-zero mean vector, $\mu_{i.}$, and a variance-covariance matrix, $\Sigma$, that defined the variation among individuals in the frequencies of each response behavior (diagonal elements) as well as the correlation among behavioral responses within observation periods (off-diagonal elements): 
+$$\gamma_{Ind(i),}\sim MvNormal(\mu_i,\Sigma)$$
+We assigned diffuse $Normal(\mu = 0, \sigma^2 = 10^3)$ priors for the Pre-treatment intercept terms, $\alpha_j$, and the regression coefficients corresponding to the Treatment and Post-treatment periods, $\beta_{1,j}$ and $\beta_{2,j}$.  We assigned a Wishart prior, parameterized by a scale matrix and a degrees of freedom parameter, to the inverse of the variance-covariance matrix, $\Sigma$.  We set the degrees of freedom equal to 7 ($df = j + 1$), the diagonal elements of the scale matrix equal to 1, and the off-diagonal elements equal to 0.  Finally, for parameter identifiability, the first behavioral response ($j = 1$; Standing head-Up) was selected as a reference category and the corresponding parameters $\alpha_1$, $\beta_{1,1}$, and $\beta_{2,1}$ were fixed to a value of 0.
 
 The model is saved as `Model_Multinomial_withREs.R` and sourced in the `jags` function below. 
 
 ```{r Model, eval = F}
 model{
   
-  # SPECIFY THE PRIORS FOR GLOABAL PARAMETERS
+  # SPECIFY THE PRIORS FOR GLOBAL PARAMETERS
   # ***********************************
   # Alphas represent the intercept for relative probabilities of each outcome at the pre-treatment period on the log scale
   # Fix the relative probability of the reference outcome (HU) to zero on the log scale

@@ -67,7 +67,7 @@ data.list=list(
 ## ----Model, eval = F-----------------------------------------------------
 ## model{
 ## 
-##   # SPECIFY THE PRIORS FOR GLOABAL PARAMETERS
+##   # SPECIFY THE PRIORS FOR GLOBAL PARAMETERS
 ##   # ***********************************
 ##   # Alphas represent the intercept for relative probabilities of each outcome at the pre-treatment period on the log scale
 ##   # Fix the relative probability of the reference outcome (HU) to zero on the log scale
