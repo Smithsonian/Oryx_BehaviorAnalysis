@@ -41,6 +41,10 @@ bdata <- bdata[which(bdata$Treatment != "control"),]
 # Set AdjObTime as a factor 
 bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 
+# Summarize the number of observations per animal
+ag1 <- aggregate(bdata$RSums, by = list(bdata$Animal, bdata$AdjObTime), FUN = sum)
+aggregate(ag1$x, by = list(ag1$Group.2), FUN = function(x) c(mn = mean(x), SD = sd(x), SUM = sum(x)))
+
 # ***********************************************************************
 # ***********************************************************************
 
