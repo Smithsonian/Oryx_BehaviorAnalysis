@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Multinomial Regression
-  >Comments/Questions: Contact Grant Connette (grmcco@gmail.com) and Jared Stabach (stabachj@si.edu)
+  >Comments/Questions: Contact Grant Connette (connetteg@si.edu) and Jared Stabach (stabachj@si.edu)
   
 Script investigates behavioral changes observed in scimitar-horned oryx (*Oryx dammah*) fit with GPS collars and described in Stabach et al. 2019.  Data fit in a Bayesian framework, estimating the probability of each behavioral activity and based on a multinomial likelihood. Each animal was used as their own control to assess how each behavior changed across time periods (Pre-treatment, Treatment, Post-treatment). Our expectation was that adverse behaviors, such as headshaking, should increase during the period immediately after animals were collared (Treatment) and return to normal activity during the Post-treatment periods when animals become acclimated or adjust to the device.
 
