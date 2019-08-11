@@ -180,10 +180,11 @@ if (!dir.exists(Output.dir)){
   print("Directory already exists!")
 }
 
-png(filename=paste0(Output.dir,"CovMatrix.png"))
+#png(filename=paste0(Output.dir,"CovMatrix.png"))
+tiff(filename=paste0(Output.dir,"CovMatrix.tif"), width = 1000, height = 1000, units = "px")
 
 ggheatmap + 
-  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 10) +
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
@@ -191,13 +192,31 @@ ggheatmap +
     panel.border = element_blank(),
     panel.background = element_blank(),
     axis.ticks = element_blank(),
+    axis.text.x = element_text(size = 20),
+    axis.text.y = element_text(size = 20),
+    text = element_text(size=20),
     legend.justification = c(1, 0),
     legend.position = c(0.4, 0.7),
-    legend.direction = "horizontal")+
-  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+    legend.direction = "horizontal") +
+  guides(fill = guide_colorbar(barwidth = 10, barheight = 1.5,
                                title.position = "top", title.hjust = 0.5))
 
 dev.off()
+
+#ggheatmap + 
+#  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+#  theme(
+#    axis.title.x = element_blank(),
+#    axis.title.y = element_blank(),
+#    panel.grid.major = element_blank(),
+#    panel.border = element_blank(),
+#    panel.background = element_blank(),
+#    axis.ticks = element_blank(),
+#    legend.justification = c(1, 0),
+#    legend.position = c(0.4, 0.7),
+#    legend.direction = "horizontal")+
+#  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+#                               title.position = "top", title.hjust = 0.5))
 
 # ***********************************************************************
 # ***********************************************************************
@@ -280,7 +299,8 @@ MCMCplot(jm2, params = c('PROBS\\[1,6\\]', 'PROBS\\[2,6\\]', 'PROBS\\[3,6\\]'), 
 dev.off()
 
 # Display only the graphs where a significant change occurred
-png(file = paste0(Output.dir,"PROBS_variables.png"),width=15, height=5, units = 'in', res=500)
+#png(file = paste0(Output.dir,"PROBS_variables.png"),width=15, height=5, units = 'in', res=500)
+tiff(file = paste0(Output.dir,"PROBS_variables.tif"),width=15, height=5, units = 'in', res=500)
 layout(matrix(c(1,2,3), 1, 3, byrow = FALSE), widths=1, heights=1)
 
 MCMCplot(jm2, params = c('PROBS\\[1,3\\]', 'PROBS\\[2,3\\]', 'PROBS\\[3,3\\]'), ref = Post.Summary[7,8], 
