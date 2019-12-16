@@ -45,6 +45,44 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 ag1 <- aggregate(bdata$RSums, by = list(bdata$Animal, bdata$AdjObTime), FUN = sum)
 aggregate(ag1$x, by = list(ag1$Group.2), FUN = function(x) c(mn = mean(x), SD = sd(x), SUM = sum(x)))
 
+# What is the length of time for each animal?  Provide minimum day, maximum day, and samples across each time period
+(day.animal <- aggregate(bdata$RelDay, by = list(bdata$Animal,bdata$AdjObTime), FUN = function(x) c(min = min(x), max = max(x), sample = length(x))))
+
+# Summarize the length of time each of the animals were monitored - Behavior
+ID <- unique(bdata$Animal)
+Time.Summary <- as.data.frame(ID)
+
+for (i in 1:length(ID)){
+  temp <- subset(bdata, Animal == ID[i])
+    temp.or <-order(temp$TimeStart,decreasing=FALSE)
+    temp <- temp[temp.or,]
+  Days <- difftime(time1 = temp[1,2],time2 = temp[nrow(temp),2], units="days") 
+    Time.Summary[i,2] <- temp[1,2]
+    Time.Summary[i,3] <- temp[nrow(temp),2]
+    Time.Summary[i,4] <- abs(round(Days,digits=0))
+  print(paste0(ID[i], " was monitored for ", Days, " days"))
+}
+
+Time.Summary
+
+# Control Animals
+ID <- unique(bdata.control$Animal)
+Time.Summary2 <- as.data.frame(ID)
+
+for (i in 1:length(ID)){
+  temp <- subset(bdata.control, Animal == ID[i])
+    temp.or <-order(temp$TimeStart,decreasing=FALSE)
+    temp <- temp[temp.or,]
+  Days <- difftime(time1 = temp[1,2],time2 = temp[nrow(temp),2], units="days") 
+    Time.Summary2[i,2] <- temp[1,2]
+    Time.Summary2[i,3] <- temp[nrow(temp),2]
+    Time.Summary2[i,4] <- abs(round(Days,digits=0))
+  print(paste0(ID[i], " was monitored for ", Days, " days"))
+}
+
+Time.Summary2
+(All.Animals <- rbind(Time.Summary,Time.Summary2))
+
 # ***********************************************************************
 # ***********************************************************************
 
