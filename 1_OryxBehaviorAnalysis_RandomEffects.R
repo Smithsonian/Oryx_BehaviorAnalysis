@@ -45,6 +45,13 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 ag1 <- aggregate(bdata$RSums, by = list(bdata$Animal, bdata$AdjObTime), FUN = sum)
 aggregate(ag1$x, by = list(ag1$Group.2), FUN = function(x) c(mn = mean(x), SD = sd(x), SUM = sum(x)))
 
+# Summarize the total number of observations per period
+ag2 <- aggregate(bdata$TotalObs, by = list(bdata$Animal,bdata$AdjObTime), FUN = function(x) c(mn = mean(x), SD = sd(x), SUM = sum(x)))
+
+# Summarize the total number of observations per period
+ag3 <- aggregate(bdata$TotalObs, by = list(bdata$Animal,bdata$AdjObTime), FUN = sum)
+aggregate(ag3$x, by = list(ag3$Group.2), FUN = function(x) c(mn = mean(x), SD = sd(x), SUM = sum(x)))
+
 # What is the length of time for each animal?  Provide minimum day, maximum day, and samples across each time period
 (day.animal <- aggregate(bdata$RelDay, by = list(bdata$Animal,bdata$AdjObTime), FUN = function(x) c(min = min(x), max = max(x), sample = length(x))))
 
