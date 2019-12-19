@@ -4,12 +4,6 @@ subtitle: "Stabach et al. 2019 - Effects of GPS Collars"
 author: "Jared Stabach, Smithsonian Conservation Biology Institute"
 date: '`r format(Sys.Date(), "%Y-%B-%d")`'
 output:
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
-  word_document:
-    toc: yes
-    toc_depth: '3'
   html_document:
     number_sections: no
     toc: yes
@@ -17,6 +11,12 @@ output:
     toc_float:
       collapsed: no
       smooth_scroll: yes
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
 ```{r setup, include=FALSE}
