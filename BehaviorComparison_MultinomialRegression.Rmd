@@ -78,13 +78,13 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 ```
 
 ### Format for JAGS
-To prepare the data to be ingested into **JAGS**, we first set the number of iterations, the burn-in rate (20%), and the thinning rate of our Markov chain.  Note, the number of iterations  (`n.iter`) has been reduced in the code (i.e., set to 10,000) so that analyses will execute quickly.  `n.iter` should be increased in subsequent analyses to make sure the parameter space has been thoroughly explored. 
+To prepare the data to be ingested into **JAGS**, we first set the number of iterations, the burn-in rate (20%), and the thinning rate of our Markov chain.  Note, the number of iterations  (`n.iter`) has been reduced in the code (i.e., set to 100,000) so that analyses will execute quickly.  `n.iter` should be increased in subsequent analyses to make sure the parameter space has been thoroughly explored. 
 
 For results presented in our manuscript, we ran three parallel Markov chain Monte Carlo (MCMC) chains for 500,000 iterations, discarding the first 100,000 iterations as burn-in, and thinned the remaining posterior samples at a rate of 1:100.  The joint posterior distribution, therefore, yielded a total of 12,000 samples.  Convergence was assessed by visual inspection of traceplots to ensure a reasonable exploration of the parameter space and by ensuring that the potential scale reduction factor was < 1.1 for each parameter (Gelman & Rubin 1992). 
 
 ```{r JAGS, eval = T, message = F}
 # Set-up burn-in/iterations for JAGS
-n.iter=10000 # Number of iterations.  
+n.iter=100000 # Number of iterations.  
 n.burnin=n.iter*0.20 # burn-in iterations (0.20 percent)
 n.thin = 100
 
