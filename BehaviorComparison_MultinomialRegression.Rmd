@@ -1,9 +1,15 @@
 ---
-title: "Behavior Analysis"
+title: "Multinomial Logistic Regression: Observation Data"
 subtitle: "Stabach et al. 2019 - Effects of GPS Collars"
 author: "Jared Stabach, Smithsonian Conservation Biology Institute"
 date: '`r format(Sys.Date(), "%Y-%B-%d")`'
 output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  word_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
     number_sections: no
     toc: yes
@@ -11,12 +17,6 @@ output:
     toc_float:
       collapsed: no
       smooth_scroll: yes
-  word_document:
-    toc: yes
-    toc_depth: '3'
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
 ---
 
 ```{r setup, include=FALSE}
@@ -26,15 +26,15 @@ knitr::opts_chunk$set(echo = TRUE)
 # Multinomial Regression
   >Comments/Questions: Contact Grant Connette (connetteg@si.edu) and Jared Stabach (stabachj@si.edu)
   
-Script investigates behavioral changes observed in scimitar-horned oryx (*Oryx dammah*) fit with GPS collars and described in Stabach et al. 2019.  Data fit in a Bayesian framework, estimating the probability of each behavioral activity and based on a multinomial likelihood. Each animal was used as their own control to assess how each behavior changed across time periods (Pre-treatment, Treatment, Post-treatment). Our expectation was that adverse behaviors, such as headshaking, should increase during the period immediately after animals were collared (Treatment) and return to normal activity during the Post-treatment periods when animals become acclimated or adjust to the device.
+Data analysis to investigate behavioral changes observed in scimitar-horned oryx (*Oryx dammah*) fitted with GPS collars and described in Stabach et al. 2019.  Data fit in a Bayesian framework, estimating the probability of different behaviors using a multinomial logistic regression model. Each animal was used as their own control to assess how each behavior changed across time periods (Pre-treatment, Treatment, Post-treatment). Our expectation was that potential adverse behaviors, such as headshaking, should increase during the period immediately after animals were collared (Treatment Period) and return to normal activity during the Post-treatment period when animals acclimate or adjust to the device.
 
-The steps described here are aimed at recreating the figures and tables listed in Stabach et al. 2019.  Importantly, this includes Figure 1.  
+The steps described here are aimed at recreating the figures and tables listed in the manuscript.
 
 ![](PROBS_variables.png)
 
 Additional details in:
 
-Stabach, J.A., Cunningham, S.A., Connette, C., Mota, J.L., Reed, D., Byron, M., Songer, M., Wacher, T., Mertes, K., Brown, J.L., Comizzoli, P., Newby, J., S. Monfort, and P. Leimgruber. In Review. Short-term effects of GPS collars on behavior and stress of scimitar-horned Oryx (*Oryx dammah*). PlosOne.
+Stabach, J.A., S.A. Cunningham, G. Connette, J.L. Mota, D. Reed, M. Byron, M. Songer, T. Wacher, K. Mertes, J.L. Brown, P. Comizzoli, J. Newby, S. Monfort, and P. Leimgruber. In Review. Short-term effects of GPS collars on behavior and stress of scimitar-horned Oryx (*Oryx dammah*). PlosOne.
 
 ### Load Libraries
 Load each library necessary to complete the analysis.
@@ -53,7 +53,7 @@ library(HDInterval)
 ```
 
 ### Read/Prepare Data
-Read the dataframe into [R](https://cran.r-project.org/) and correct the datatypes for some of the variables (`as.POSIXct()` and `as.factor()`).  Remove the 'Control' animals from the dataframe since the sample size was so low from this subset.  Collared animals serve as their own control, since pre-treatment information was collected.
+Import the dataframe into [R](https://cran.r-project.org/) and correct the datatypes for some of the variables (`as.POSIXct()` and `as.factor()`).  Remove the 'Control' animals from the dataframe since the number of individuals was too low to use in analyses.  Collared animals served as their own control, since pre-treatment information was collected.
 
 ```{r Read, eval = T}
 # Read in file
@@ -78,9 +78,9 @@ bdata$AdjObTime <- as.factor(bdata$AdjObTime)
 ```
 
 ### Format for JAGS
-To prepard the data to be ingested into **JAGS**, we first set the number of iterations, the burn-in rate (20%), and the thinning rate.  Note, the number of iterations  (`n.iter`) has been reduced in the code (i.e., set to 10,000) so that analyses will execute quickly.  `n.iter` should be increased in subsequent analyses to make sure the parameter space has been thoroughly explored. 
+To prepare the data to be ingested into **JAGS**, we first set the number of iterations, the burn-in rate (20%), and the thinning rate of our Markov chain.  Note, the number of iterations  (`n.iter`) has been reduced in the code (i.e., set to 10,000) so that analyses will execute quickly.  `n.iter` should be increased in subsequent analyses to make sure the parameter space has been thoroughly explored. 
 
-For results presented in our manuscript, we ran three parallel Markov chain Monte Carlo (MCMC) chains for 500,000 iterations, discarding the first 100,000 iterations as burn-in, and thinned the remaining posterior samples at a rate of 1:100.  The joint posterior distribution, therefore, yielded a total of 12,000 samples.  Convergence was assessed by visual inspection of traceplots to ensure a reasonable exploration of the parameter space and by ensuring that the potential scale reduction factor was < 1.1 for each variable (Gelman & Rubin 1992). 
+For results presented in our manuscript, we ran three parallel Markov chain Monte Carlo (MCMC) chains for 500,000 iterations, discarding the first 100,000 iterations as burn-in, and thinned the remaining posterior samples at a rate of 1:100.  The joint posterior distribution, therefore, yielded a total of 12,000 samples.  Convergence was assessed by visual inspection of traceplots to ensure a reasonable exploration of the parameter space and by ensuring that the potential scale reduction factor was < 1.1 for each parameter (Gelman & Rubin 1992). 
 
 ```{r JAGS, eval = T, message = F}
 # Set-up burn-in/iterations for JAGS
@@ -114,7 +114,7 @@ data.list=list(
 ```
 
 ### Model Description
-To assess differences in the frequencies of observed response behaviors between treatment periods, we fit a multinomial logistic regression model to the data, formulated in a Bayesian framework.  The behavioral observations for each 10-minute observation period were represented as a vector of counts, $C_{i.} = (C_{i1},\dots,C_{i6})$, summarizing the number of times each of the six response behaviors were observed during a given observation period, $i$.  Each vector of behavioral counts was treated as a multinomial response:
+To assess differences in the frequencies of observed response behaviors between treatment periods, we fit a multinomial logistic regression model to the data.  The behavioral observations for each 10-minute observation period were represented as a vector of counts, $C_{i.} = (C_{i1},\dots,C_{i6})$, summarizing the number of times each of the six response behaviors were observed during a given observation period, $i$.  Each vector of behavioral counts was treated as a multinomial response:
 
 $$ C_{i.}\sim Multinomial(p_{i.},N_i)$$
 
@@ -124,7 +124,7 @@ We modeled response probabilities, $p_{ij}$, for a given observation period, $i$
 
 $$p_{ij} = \frac{\varphi_{ij}}{\Sigma_j\varphi_{ij}} $$
 $$log(\varphi_{ij}) = \alpha_j + \beta_{1,j}Period1_i+\beta_{2,j}Period2_i+\gamma_{Ind(i)j} $$
-where $\alpha_j$ represented the baseline (Pre-treatment) regression intercept for response behavior $j$, $\beta_{1,j}$ represented the corresponding regression coefficient associated with the treatment period, and $\beta_{2,j}$ represented the regression coefficient associated with the post-treatment period.  The binary indicator variables, $Period1_i$  and $Period2_i$, designated whether or not each observation period, $i$, occurred during either the Treatment ($Period1$) or Post-treatment period ($Period2$).  An individual random error term, $\gamma_{Ind(i)j}$, was incorporated to control for the effects of repeated measurements of the same individuals and uneven numbers of observation periods for each individual among treatment periods.  Individual errors, $\gamma_{Ind(i).}$, were assumed to be realizations of a multivariate normal distribution with an all-zero mean vector, $\mu_{i.}$, and a variance-covariance matrix, $\Sigma$, that defined the variation among individuals in the frequencies of each response behavior (diagonal elements) as well as the correlation among behavioral responses within observation periods (off-diagonal elements): 
+where $\alpha_j$ represented the baseline (Pre-treatment) regression intercept for response behavior $j$, $\beta_{1,j}$ represented the corresponding regression coefficient associated with the treatment period, and $\beta_{2,j}$ represented the regression coefficient associated with the post-treatment period.  The binary indicator variables, $Period1_i$  and $Period2_i$, designated whether or not each observation period, $i$, occurred during either the Treatment ($Period1$) or Post-treatment period ($Period2$).  An individual random error term, $\gamma_{Ind(i)j}$, was incorporated to control for the effects of repeated measurements of the same individual and uneven numbers of observation periods for each individual among treatment periods.  Individual errors, $\gamma_{Ind(i).}$, were assumed to be realizations of a multivariate normal distribution with an all-zero mean vector, $\mu_{i.}$, and a variance-covariance matrix, $\Sigma$, that defined the variation among individuals in the frequencies of each response behavior (diagonal elements) as well as the correlation among behavioral responses within observation periods (off-diagonal elements): 
 $$\gamma_{Ind(i),}\sim MvNormal(\mu_i,\Sigma)$$
 We assigned diffuse $Normal(\mu = 0, \sigma^2 = 10^3)$ priors for the Pre-treatment intercept terms, $\alpha_j$, and the regression coefficients corresponding to the Treatment and Post-treatment periods, $\beta_{1,j}$ and $\beta_{2,j}$.  We assigned a Wishart prior, parameterized by a scale matrix and a degrees of freedom parameter, to the inverse of the variance-covariance matrix, $\Sigma$.  We set the degrees of freedom equal to 7 ($df = j + 1$), the diagonal elements of the scale matrix equal to 1, and the off-diagonal elements equal to 0.  Finally, for parameter identifiability, the first behavioral response ($j = 1$; Standing head-Up) was selected as a reference category and the corresponding parameters $\alpha_1$, $\beta_{1,1}$, and $\beta_{2,1}$ were fixed to a value of 0.
 
@@ -201,7 +201,7 @@ model{
     }
   }
   
-  # DERIVED QUANTITIES
+  # DERIVED QUANTITIES - Probabilities of each behavior during each period
   # ***********************************
   for (j in 1:n.outcomes){
     PROBS[1,j] <- PHI[1,j] / sum(PHI[1,])
@@ -264,7 +264,7 @@ Post.Summary
 ```
 
 ### Export Summary
-Output `Post.Summary` to re-create Appendix A.  
+Output `Post.Summary` to re-create Appendix S5.  
 
 ```{r Export, eval=F}
 # Export file
@@ -272,10 +272,10 @@ write.csv(Post.Summary, "./Output/jm2_Output_Summary.csv")
 ```
 
 ### Plot Results
-Using the `MCMCplot` function, plot the probabilities of the behaviors with significant effects from the pre-treatment period.  Again, here, it is important to keep track of the parameters output from the model.  Note that the reference category (pre-treatment period) has been set to '0'.  Thus, treatment and post-treatment periods are the probability of behavior in reference to this pre-treatment period.  This allowed us to evaluate the general effect of each behavior.  The code could be easily modified to plot all variables estimated.  To save this plot to a directory, the command `png()` and `dev.off()` can be activated in the code.
+Using the `MCMCplot` function, plot the probabilities of the behaviors with significant effects from the pre-treatment period.  Again, here, it is important to keep track of the parameters output from the model.  Note that the reference category (pre-treatment period) has been set to '0'.  Thus, treatment and post-treatment periods are the probability of behavior in reference to this pre-treatment period.  This allowed us to evaluate the general effect of collaring on each behavior.  The code could be easily modified to plot all variables estimated.  To save this plot to a directory, the command `png()` and `dev.off()` can be activated in the code.
 
 ```{r Plot, eval = T}
-# Plot the caterpillar plots from the MCMC output
+# Plot the caterpillar plots for the entire MCMC output
 #MCMCplot(jm2, params = 'PROBS')
 
 # Set all the Labels
